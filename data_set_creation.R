@@ -52,7 +52,12 @@ game_team_play_count_avg <- pbp_db %>%
 #get the teams in each game and other info like the point differential and scores of the teams
 game_teams_and_info <- pbp_db %>%
   dplyr::group_by(game_id) %>%
-  dplyr::summarise(home_team = home_team, away_team = away_team, home_score = home_score, away_score = away_score, result = result) %>%
+  dplyr::summarise(season = season, week = week, season_type = season_type, game_date, 
+                   start_time = start_time, roof = roof, surface = surface, weather = weather, 
+                   stadium = stadium, game_stadium = game_stadium, 
+                   home_coach = home_coach, away_coach = away_coach,
+                   home_team = home_team, away_team = away_team, 
+                   home_score = home_score, away_score = away_score, result = result) %>%
   dplyr::select(game_id, home_team, away_team, home_score, away_score, result) %>%
   dplyr::rename(point_differential = result)
 
