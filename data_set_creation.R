@@ -80,15 +80,42 @@ nfl_data_set <- game_teams_and_info %>%
   dplyr::left_join(game_team_play_count_avg, by = c('game_id' = 'game_id', 'home_team' = 'posteam')) %>%
   rename(home_total_plays = total_plays, home_plays_per_drive = avg_plays_per_drive) %>%
   dplyr::left_join(game_team_play_count_avg, by = c('game_id' = 'game_id', 'away_team' = 'posteam')) %>%
-  rename(away_total_plays = total_plays, away_plays_per_drive = avg_plays_per_drive)
-
+  rename(away_total_plays = total_plays, away_plays_per_drive = avg_plays_per_drive) %>% 
+  dplyr::collect()
+  
 #write nfl_data_set to db
 DBI::dbWriteTable(connection, "nfl_data_set", nfl_data_set)
+
+#remove nfl_data_set from memory
+rm(nfl_data_set)
+
 #write game_team_pos_total_avg to db
 DBI::dbWriteTable(connection, "game_team_pos_total_avg", game_team_pos_total_avg)
+
+#remove game_team_pos_total_avg from memory
+rm(game_team_pos_total_avg)
+
 #get game_team_pos_total_avg table
+game_team_pos_total_avg_sql <- dplyr::tbl(connection, "game_team_pos_total_avg") #get the game_team_pos_total_avg table from the db
 
 #join nfl_data_set and game_team_pos_total_avg tables
+nfl_data_set_sql <- dplyr::tbl(connection, "nfl_data_set") %>%  #get the nfl_data_set table from the db
+  dplyr::left_join(game_team_pos_total_avg_sql, by = c('game_id' = 'game_id', 'home_team' = 'posteam')) %>%
+  rename(home_total_time_pos = total_time_pos, home_avg_drive_time_pos = avg_drive_time_pos) %>%
+  dplyr::left_join(game_team_pos_total_avg_sql, by = c('game_id' = 'game_id', 'away_team' = 'posteam')) %>%
+  rename(away_total_time_pos = total_time_pos, away_avg_drive_time_pos = avg_drive_time_pos) %>% 
+  dplyr::collect()
+
+#remove nfl_data_set table from db
+DBI::dbRemoveTable(connection, "nfl_data_set")
+
+#insert nfl_data_set table in db with the joined result
+DBI::dbWriteTable(connection, "nfl_data_set", nfl_data_set_sql)
+
+#remove nfl_data_set_sql and game_team_pos_total_avg_sql from memory
+rm(nfl_data_set_sql, game_team_pos_total_avg_sql)
 
 #delete game_team_pos_total_avg tables
+DBI::dbRemoveTable(connection, "game_team_pos_total_avg")
+
 DBI::dbDisconnect(connection) #disconnect from database
