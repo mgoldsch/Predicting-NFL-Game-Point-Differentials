@@ -19,6 +19,30 @@ game_team_offense_yards <- pbp_db %>%
   dplyr::summarise(off_yards = sum(yards)) %>%
   dplyr::select(game_id, posteam, off_yards)
 
+#calculate the offensive passing yards for each team for a game (and drive average) (and breakdown by quarter) TODO
+# game_team_offense_passing_yards <- pbp_db %>%
+#   dplyr::filter(!is.na(posteam) & posteam != "") %>%
+#   dplyr::group_by(game_id, posteam, fixed_drive) %>%
+#   dplyr::summarise(yards = ydsnet) %>%
+#   dplyr::ungroup() %>%
+#   dplyr::group_by(game_id, posteam) %>%
+#   dplyr::summarise(off_yards = sum(yards)) %>%
+#   dplyr::select(game_id, posteam, off_yards)
+
+#calculate the offensive rushing yards for each team for a game (and drive average) (and breakdown by quarter)TODO
+# game_team_offense_yards <- pbp_db %>%
+#   dplyr::filter(!is.na(posteam) & posteam != "") %>%
+#   dplyr::group_by(game_id, posteam, fixed_drive) %>%
+#   dplyr::summarise(yards = ydsnet) %>%
+#   dplyr::ungroup() %>%
+#   dplyr::group_by(game_id, posteam) %>%
+#   dplyr::summarise(off_yards = sum(yards)) %>%
+#   dplyr::select(game_id, posteam, off_yards)
+
+#calculate the offensive passing yards per pass attempt for each team for a game (and breakdown by quarter) TODO
+
+#calculate the offensive rushing yards per rush attempt for each team for a game (and breakdown by quarter) TODO
+
 #calculate yac total for each team for a game
 game_team_yac <- pbp_db %>%
   dplyr::filter(!is.na(yards_after_catch) & !is.na(posteam) & posteam != "") %>%
@@ -48,6 +72,31 @@ game_team_play_count_avg <- pbp_db %>%
   dplyr::summarise(total_plays = sum(drive_play_count), avg_plays_per_drive = mean(drive_play_count)) %>%
   dplyr::select(game_id, posteam, total_plays, avg_plays_per_drive)
 
+#get total sacks and interceptions per game and per drive (defense)
+game_def_sacks_ints <- pbp_db %>% 
+  dplyr::filter(!is.na(posteam) & posteam != "") %>% 
+  dplyr::group_by(game_id, defteam, fixed_drive) %>% 
+  dplyr::summarise(drive_sack_count = sum(sack), drive_int_count = sum(interception)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(game_id, defteam) %>% 
+  dplyr::summarise(total_sacks = sum(drive_sack_count), 
+                                 avg_sacks_per_drive = mean(drive_sack_count, 
+                                 total_ints = sum(drive_int_count), 
+                                 avg_ints_per_drive = mean(drive_int_count))) %>% 
+  dplyr::select(game_id, defteam, total_sacks, avg_sacks_per_drive, total_ints, avg_ints_per_drive)
+
+#get total sacks allowed and interceptions thrown per game and per drive (offense)
+game_off_sacks_ints <- pbp_db %>% 
+  dplyr::filter(!is.na(posteam) & posteam != "") %>% 
+  dplyr::group_by(game_id, posteam, fixed_drive) %>% 
+  dplyr::summarise(drive_sack_allow_count = sum(sack), drive_int_throw_count = sum(interception)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(game_id, posteam) %>% 
+  dplyr::summarise(total_sacks_allow = sum(drive_sack_allow_count), 
+                                       avg_sacks_allow_per_drive = mean(drive_sack_allow_count, 
+                                       total_ints_throw = sum(drive_int_throw_count), 
+                                       avg_ints_throw_per_drive = mean(drive_int_throw_count))) %>% 
+  dplyr::select(game_id, posteam, total_sacks_allow, avg_sacks_allow_per_drive, total_ints_throw, avg_ints_throw_per_drive)
 
 #get the teams in each game and other info like the point differential and scores of the teams
 game_teams_and_info <- pbp_db %>%
@@ -78,6 +127,8 @@ nfl_data_set <- game_teams_and_info %>%
   rename(home_total_plays = total_plays, home_plays_per_drive = avg_plays_per_drive) %>%
   dplyr::left_join(game_team_play_count_avg, by = c('game_id' = 'game_id', 'away_team' = 'posteam')) %>%
   rename(away_total_plays = total_plays, away_plays_per_drive = avg_plays_per_drive) %>% 
+  #TODO join def sack int
+  #TODO join off sack int
   dplyr::collect()
   
 #write nfl_data_set to db
