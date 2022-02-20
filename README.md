@@ -6,9 +6,11 @@ CONSIDER WHAT YEAR CUTOFF TO DO, both to limit data and also because of the diff
 
 create script to scrub database so the data set can be updated or remade\
 create rollmean for the current varaibles\
+consider adding quarter breakdowns for variables already created\
 get more variables like rushing yards, passing yards, touchdowns, receptions, rushes, etc\
 defensive stats\
 epa and wp\
+elo\
 penalties, penalty yards\
 turnovers\
 return yards\
