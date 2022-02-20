@@ -57,10 +57,21 @@ game_team_offense_yards_qtr <- pbp_db %>%
 game_team_yac <- pbp_db %>%
   dplyr::filter(!is.na(yards_after_catch) & !is.na(posteam) & posteam != "") %>%
   dplyr::group_by(game_id, posteam, fixed_drive) %>%
-  dplyr::summarise(yac_drive = sum(yards_after_catch, na.rm = TRUE)) %>% 
-  dplyr::ungroup() %>% 
-  dplyr::group_by(game_id, posteam) %>% 
+  dplyr::summarise(yac_drive = sum(yards_after_catch, na.rm = TRUE)) %>%
+  dplyr::ungroup() %>%
+  dplyr::group_by(game_id, posteam) %>%
   dplyr::summarise(total_yac = sum(yac_drive, na.rm = TRUE), yac_drive_avg =  mean(yac_drive, na.rm = TRUE))
+
+#calculate yac total and drive average breakdown by quarter
+game_team_yac_qtr <- pbp_db %>%
+  dplyr::filter(!is.na(yards_after_catch) & !is.na(posteam) & posteam != "") %>%
+  dplyr::group_by(game_id, posteam, fixed_drive) %>%
+  dplyr::summarise(yac_drive = sum(yards_after_catch, na.rm = TRUE), qtr = qtr) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(game_id, posteam, qtr) %>% 
+  dplyr::summarise(total_yac = sum(yac_drive, na.rm = TRUE), yac_drive_avg =  mean(yac_drive, na.rm = TRUE)) %>% 
+  pivot_wider(names_from = qtr, values_from = c(total_yac, yac_drive_avg), names_glue = "{.value}_qtr_{qtr}") %>% 
+  dplyr::collect()
 
 #calculate the total time of possession and average time of possession of a drive for each team for a game
 game_team_pos_total_avg <- pbp_db %>%
