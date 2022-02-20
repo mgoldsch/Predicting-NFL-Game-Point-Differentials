@@ -7,6 +7,9 @@ get more variables
   like rushing yards, passing yards, touchdowns, receptions, rushes, etc
   defensive stats
   epa and wp
+  penalties, penalty yards
+  turnovers
+  return yards
 update readme
 
 ## PROJECT SUMMARY
