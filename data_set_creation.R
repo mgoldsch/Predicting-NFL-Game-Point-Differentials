@@ -68,14 +68,6 @@ nfl_data_set <- game_teams_and_info %>%
   rename(home_yac = total_yac) %>%
   dplyr::left_join(game_team_yac, by = c('game_id' = 'game_id', 'away_team' = 'posteam')) %>%
   rename(away_yac = total_yac) %>% 
-  #add time of possession stats
-  # dplyr::left_join(game_team_pos_total_avg, by = c('game_id' = 'game_id', 'home_team' = 'posteam'), copy = TRUE) %>%
-  # rename(home_total_time_pos = total_time_pos, home_avg_drive_time_pos = avg_drive_time_pos) %>%
-  # dplyr::left_join(game_team_pos_total_avg, by = c('game_id' = 'game_id', 'away_team' = 'posteam'), copy = TRUE) %>%
-  # rename(away_total_time_pos = total_time_pos, away_avg_drive_time_pos = avg_drive_time_pos) %>%
-  #i believe the above can't be joined b/c it is a dataframe but the rest is sqlite query- confired
-  #setting copy=TRUE allows you to get around this but I think there is a memory issue....
-  #try writing this df to db as a table, then join them in the db and delete?
   #add play count and average play count per drive
   dplyr::left_join(game_team_play_count_avg, by = c('game_id' = 'game_id', 'home_team' = 'posteam')) %>%
   rename(home_total_plays = total_plays, home_plays_per_drive = avg_plays_per_drive) %>%
