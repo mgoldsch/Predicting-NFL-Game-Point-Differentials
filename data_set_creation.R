@@ -55,23 +55,22 @@ game_team_offense_yards_qtr <- pbp_db %>%
 
 #calculate yac total and drive average for each team for a game
 game_team_yac <- pbp_db %>%
-  dplyr::filter(!is.na(yards_after_catch) & !is.na(posteam) & posteam != "") %>%
+  dplyr::filter(!is.na(posteam) & posteam != "") %>%
   dplyr::group_by(game_id, posteam, fixed_drive) %>%
   dplyr::summarise(yac_drive = sum(yards_after_catch, na.rm = TRUE)) %>%
   dplyr::ungroup() %>%
   dplyr::group_by(game_id, posteam) %>%
-  dplyr::summarise(total_yac = sum(yac_drive, na.rm = TRUE), yac_drive_avg =  mean(yac_drive, na.rm = TRUE))
+  dplyr::summarise(total_yac = sum(yac_drive, na.rm = TRUE), yac_drive_avg = sum(yac_drive, na.rm = TRUE)/n(), drive_count = n())
 
 #calculate yac total and drive average breakdown by quarter
 game_team_yac_qtr <- pbp_db %>%
-  dplyr::filter(!is.na(yards_after_catch) & !is.na(posteam) & posteam != "") %>%
+  dplyr::filter(!is.na(posteam) & posteam != "") %>%
   dplyr::group_by(game_id, posteam, fixed_drive) %>%
-  dplyr::summarise(yac_drive = sum(yards_after_catch, na.rm = TRUE), qtr = qtr) %>% 
-  dplyr::ungroup() %>% 
-  dplyr::group_by(game_id, posteam, qtr) %>% 
-  dplyr::summarise(total_yac = sum(yac_drive, na.rm = TRUE), yac_drive_avg =  mean(yac_drive, na.rm = TRUE)) %>% 
-  pivot_wider(names_from = qtr, values_from = c(total_yac, yac_drive_avg), names_glue = "{.value}_qtr_{qtr}") %>% 
-  dplyr::collect()
+  dplyr::summarise(yac_drive = sum(yards_after_catch, na.rm = TRUE), qtr = qtr) %>%
+  dplyr::ungroup() %>%
+  dplyr::group_by(game_id, posteam, qtr) %>%
+  dplyr::summarise(total_yac = sum(yac_drive, na.rm = TRUE), yac_drive_avg =  sum(yac_drive, na.rm = TRUE)/n(), drive_count = n()) %>%
+  pivot_wider(names_from = qtr, values_from = c(total_yac, yac_drive_avg, drive_count), names_glue = "{.value}_qtr_{qtr}") %>%
 
 #calculate the total time of possession and average time of possession of a drive for each team for a game
 game_team_pos_total_avg <- pbp_db %>%
@@ -143,9 +142,9 @@ nfl_data_set <- game_teams_and_info %>%
   rename(away_off_yards = off_yards, away_off_yards_drive_avg = off_yards_drive_avg) %>%
   #add yac
   dplyr::left_join(game_team_yac, by = c('game_id' = 'game_id', 'home_team' = 'posteam')) %>%
-  rename(home_yac = total_yac, home_yac_drive_avg = yac_drive_avg ) %>%
+  rename(home_yac = total_yac, home_yac_drive_avg = yac_drive_avg, home_drive_count = drive_count ) %>%
   dplyr::left_join(game_team_yac, by = c('game_id' = 'game_id', 'away_team' = 'posteam')) %>%
-  rename(away_yac = total_yac, away_yac_drive_avg = yac_drive_avg) %>%
+  rename(away_yac = total_yac, away_yac_drive_avg = yac_drive_avg, away_drive_count = drive_count) %>%
   #add play count and average play count per drive
   dplyr::left_join(game_team_play_count_avg, by = c('game_id' = 'game_id', 'home_team' = 'posteam')) %>%
   rename(home_total_plays = total_plays, home_plays_per_drive = avg_plays_per_drive) %>%
@@ -154,6 +153,7 @@ nfl_data_set <- game_teams_and_info %>%
   #TODO join def sack int
   #TODO join off sack int
   #TODO join off yards qtr breakdown
+  #TODO join yac qtr breakdown
   dplyr::collect()
 
 #write nfl_data_set to db
