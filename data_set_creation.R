@@ -9,16 +9,15 @@ connection <- DBI::dbConnect(RSQLite::SQLite(), "./data/pbp_db") #create connect
 
 pbp_db <- dplyr::tbl(connection, "nflfastR_pbp") #get the table from the db
 
-#calculate the offensive yards for each team for a game
+#calculate the offensive yards for each team for a game with drive average
 game_team_offense_yards <- pbp_db %>%
   dplyr::filter(!is.na(posteam) & posteam != "") %>%
   dplyr::group_by(game_id, posteam, fixed_drive) %>%
   dplyr::summarise(yards = ydsnet) %>%
   dplyr::ungroup() %>%
   dplyr::group_by(game_id, posteam) %>%
-  dplyr::summarise(off_yards = sum(yards)) %>%
-  dplyr::select(game_id, posteam, off_yards)
-game_team_offense_yards
+  dplyr::summarise(off_yards = sum(yards), off_yards_drive_avg = mean(yards)) %>%
+  dplyr::select(game_id, posteam, off_yards, off_yards_drive_avg)
 
 #calculate the offensive yards for each team for a game (with drive avg) breakdown by quarter
 game_team_offense_yards_qtr <- pbp_db %>%
@@ -125,9 +124,9 @@ game_teams_and_info <- pbp_db %>%
 nfl_data_set <- game_teams_and_info %>%
   #add offensive yards
   dplyr::left_join(game_team_offense_yards, by = c('game_id' = 'game_id', 'home_team' = 'posteam')) %>%
-  rename(home_off_yards = off_yards) %>%
+  rename(home_off_yards = off_yards, home_off_yards_drive_avg = off_yards_drive_avg) %>%
   dplyr::left_join(game_team_offense_yards, by = c('game_id' = 'game_id', 'away_team' = 'posteam')) %>%
-  rename(away_off_yards = off_yards) %>%
+  rename(away_off_yards = off_yards, away_off_yards_drive_avg = off_yards_drive_avg) %>%
   #add yac
   dplyr::left_join(game_team_yac, by = c('game_id' = 'game_id', 'home_team' = 'posteam')) %>%
   rename(home_yac = total_yac) %>%
