@@ -90,9 +90,9 @@ game_def_sacks_ints <- pbp_db %>%
   dplyr::ungroup() %>%
   dplyr::group_by(game_id, defteam) %>%
   dplyr::summarise(total_sacks = sum(drive_sack_count),
-                                 avg_sacks_per_drive = mean(drive_sack_count,
+                                 avg_sacks_per_drive = mean(drive_sack_count),
                                  total_ints = sum(drive_int_count),
-                                 avg_ints_per_drive = mean(drive_int_count))) %>%
+                                 avg_ints_per_drive = mean(drive_int_count)) %>%
   dplyr::select(game_id, defteam, total_sacks, avg_sacks_per_drive, total_ints, avg_ints_per_drive)
 
 #get total sacks allowed and interceptions thrown per game and per drive (offense)
@@ -103,9 +103,9 @@ game_off_sacks_ints <- pbp_db %>%
   dplyr::ungroup() %>%
   dplyr::group_by(game_id, posteam) %>%
   dplyr::summarise(total_sacks_allow = sum(drive_sack_allow_count),
-                                       avg_sacks_allow_per_drive = mean(drive_sack_allow_count,
+                                       avg_sacks_allow_per_drive = mean(drive_sack_allow_count),
                                        total_ints_throw = sum(drive_int_throw_count),
-                                       avg_ints_throw_per_drive = mean(drive_int_throw_count))) %>%
+                                       avg_ints_throw_per_drive = mean(drive_int_throw_count)) %>%
   dplyr::select(game_id, posteam, total_sacks_allow, avg_sacks_allow_per_drive, total_ints_throw, avg_ints_throw_per_drive)
 
 #get the teams in each game and other info like the point differential and scores of the teams
