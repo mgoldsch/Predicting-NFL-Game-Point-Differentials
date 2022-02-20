@@ -23,6 +23,7 @@ get more variables
     do average throw depth by play
 update readme
 
+data_set_creation.R should be moved to helper scripts
 ## PROJECT SUMMARY
 
 ## Creation of Database
