@@ -1,2 +1,5 @@
 #Mac DS Store
 .DS_Store
+
+#nfl database
+./data/pdp_db
