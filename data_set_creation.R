@@ -53,7 +53,7 @@ game_team_offense_yards_qtr <- pbp_db %>%
 
 #calculate the offensive rushing yards per rush attempt for each team for a game (and breakdown by quarter) TODO
 
-#calculate yac total for each team for a game
+#calculate yac total and drive average for each team for a game
 game_team_yac <- pbp_db %>%
   dplyr::filter(!is.na(yards_after_catch) & !is.na(posteam) & posteam != "") %>%
   dplyr::group_by(game_id, posteam, fixed_drive) %>%
