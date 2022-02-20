@@ -107,7 +107,7 @@ DBI::dbWriteTable(connection, "nfl_data_set", nfl_data_set_sql)
 #remove nfl_data_set_sql and game_team_pos_total_avg_sql from memory
 rm(nfl_data_set_sql, game_team_pos_total_avg_sql)
 
-#delete game_team_pos_total_avg tables
+#delete game_team_pos_total_avg table
 DBI::dbRemoveTable(connection, "game_team_pos_total_avg")
 
 DBI::dbDisconnect(connection) #disconnect from database
