@@ -10,6 +10,13 @@ get more variables
   penalties, penalty yards
   turnovers
   return yards
+  first downs
+  first downs per drive
+  drive_inside20
+    if the drive got into the redzone
+    can use this to measure offense ability to get into redzone
+    defense bending
+    can combine with drive result to get red zone efficiency for both offense and defense
 update readme
 
 ## PROJECT SUMMARY
