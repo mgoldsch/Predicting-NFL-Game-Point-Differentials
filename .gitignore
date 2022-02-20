@@ -2,4 +2,4 @@
 .DS_Store
 
 #nfl database
-./data/pbp_db
+/data/pbp_db
