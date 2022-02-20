@@ -56,8 +56,8 @@ game_teams_and_info <- pbp_db %>%
   dplyr::select(game_id, home_team, away_team, home_score, away_score, result) %>%
   dplyr::rename(point_differential = result)
 
-#produce a result that has the info from game_teams_and_info and the offensive yards for each team and yac
-combined <- game_teams_and_info %>%
+#produce a result that has the info from game_teams_and_info,the offensive yards for each team, yac, play count and average play count per drive
+nfl_data_set <- game_teams_and_info %>%
   #add offensive yards
   dplyr::left_join(game_team_offense_yards, by = c('game_id' = 'game_id', 'home_team' = 'posteam')) %>%
   rename(home_off_yards = off_yards) %>%
@@ -69,10 +69,10 @@ combined <- game_teams_and_info %>%
   dplyr::left_join(game_team_yac, by = c('game_id' = 'game_id', 'away_team' = 'posteam')) %>%
   rename(away_yac = total_yac) %>% 
   #add time of possession stats
-  dplyr::left_join(game_team_pos_total_avg, by = c('game_id' = 'game_id', 'home_team' = 'posteam'), copy = TRUE) %>%
-  rename(home_total_time_pos = total_time_pos, home_avg_drive_time_pos = avg_drive_time_pos) %>%
-  dplyr::left_join(game_team_pos_total_avg, by = c('game_id' = 'game_id', 'away_team' = 'posteam'), copy = TRUE) %>%
-  rename(away_total_time_pos = total_time_pos, away_avg_drive_time_pos = avg_drive_time_pos) %>%
+  # dplyr::left_join(game_team_pos_total_avg, by = c('game_id' = 'game_id', 'home_team' = 'posteam'), copy = TRUE) %>%
+  # rename(home_total_time_pos = total_time_pos, home_avg_drive_time_pos = avg_drive_time_pos) %>%
+  # dplyr::left_join(game_team_pos_total_avg, by = c('game_id' = 'game_id', 'away_team' = 'posteam'), copy = TRUE) %>%
+  # rename(away_total_time_pos = total_time_pos, away_avg_drive_time_pos = avg_drive_time_pos) %>%
   #i believe the above can't be joined b/c it is a dataframe but the rest is sqlite query- confired
   #setting copy=TRUE allows you to get around this but I think there is a memory issue....
   #try writing this df to db as a table, then join them in the db and delete?
@@ -82,6 +82,13 @@ combined <- game_teams_and_info %>%
   dplyr::left_join(game_team_play_count_avg, by = c('game_id' = 'game_id', 'away_team' = 'posteam')) %>%
   rename(away_total_plays = total_plays, away_plays_per_drive = avg_plays_per_drive)
 
-combined
+#write nfl_data_set to db
+DBI::dbWriteTable(connection, "nfl_data_set", nfl_data_set)
+#write game_team_pos_total_avg to db
+DBI::dbWriteTable(connection, "game_team_pos_total_avg", game_team_pos_total_avg)
+#get game_team_pos_total_avg table
 
+#join nfl_data_set and game_team_pos_total_avg tables
+
+#delete game_team_pos_total_avg tables
 DBI::dbDisconnect(connection) #disconnect from database
