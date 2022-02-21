@@ -35,7 +35,8 @@ game_team_yards <- pbp_db %>%
   pivot_wider(names_from = qtr, 
               values_from = c(off_passing_yards, off_rushing_yards, off_pass_yds_drive_avg, off_rush_yds_drive_avg, drive_count), 
               names_glue = "{.value}_qtr_{qtr}") %>%
-  dplyr::select(-c(total_drives, drive_count_qtr_1, drive_count_qtr_2, drive_count_qtr_3, drive_count_qtr_4))
+  dplyr::select(-c(total_drives, drive_count_qtr_1, drive_count_qtr_2, drive_count_qtr_3, drive_count_qtr_4)) %>% 
+  dplyr::compute()
 
 #calculate the offensive passing yards per pass attempt for each team for a game (and breakdown by quarter) TODO
 
@@ -58,7 +59,7 @@ game_team_yac_qtr <- pbp_db %>%
   dplyr::ungroup() %>%
   dplyr::group_by(game_id, posteam, qtr) %>%
   dplyr::summarise(total_yac = sum(yac_drive, na.rm = TRUE), yac_drive_avg =  sum(yac_drive, na.rm = TRUE)/n(), drive_count = n()) %>%
-  pivot_wider(names_from = qtr, values_from = c(total_yac, yac_drive_avg, drive_count), names_glue = "{.value}_qtr_{qtr}") %>%
+  pivot_wider(names_from = qtr, values_from = c(total_yac, yac_drive_avg, drive_count), names_glue = "{.value}_qtr_{qtr}")
 
 #calculate the total time of possession and average time of possession of a drive for each team for a game
 game_team_pos_total_avg <- pbp_db %>%
@@ -112,7 +113,7 @@ game_off_sacks_ints <- pbp_db %>%
 #get the teams in each game and other info like the point differential and scores of the teams
 game_teams_and_info <- pbp_db %>%
   dplyr::group_by(game_id) %>%
-  dplyr::summarise(season = season, week = week, season_type = season_type, game_date,
+  dplyr::summarise(season = season, week = week, season_type = season_type, game_date = game_date,
                    start_time = start_time, roof = roof, surface = surface, weather = weather,
                    stadium = stadium, game_stadium = game_stadium,
                    home_coach = home_coach, away_coach = away_coach,
@@ -124,7 +125,8 @@ game_teams_and_info <- pbp_db %>%
 #produce a result that has the info from game_teams_and_info,the offensive yards for each team, yac, play count and average play count per drive
 nfl_data_set <- game_teams_and_info %>%
   #add offensive yards
-  
+  dplyr::left_join(game_team_yards, by = c('game_id' = 'game_id', 'home_team' = 'posteam')) %>%
+  dplyr::left_join(game_team_yards, by = c('game_id' = 'game_id', 'away_team' = 'posteam'), suffix = c("_home", "_away")) %>%
   #add yac
   dplyr::left_join(game_team_yac, by = c('game_id' = 'game_id', 'home_team' = 'posteam')) %>%
   rename(home_yac = total_yac, home_yac_drive_avg = yac_drive_avg, home_drive_count = drive_count ) %>%
