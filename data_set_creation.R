@@ -12,7 +12,7 @@ connection <- DBI::dbConnect(RSQLite::SQLite(), "./data/pbp_db") #create connect
 
 pbp_db <- dplyr::tbl(connection, "nflfastR_pbp") #get the table from the db
 
-#calculate the offensive passing yards for each team for a game (and drive average) (and breakdown by quarter) TODO
+#calculate the offensive passing yards for each team for a game (and drive average) (and breakdown by quarter)
 game_team_yards <- pbp_db %>%
   dplyr::filter(!is.na(posteam) & posteam != "") %>%
   dplyr::group_by(game_id, posteam, fixed_drive) %>%
