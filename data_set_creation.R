@@ -49,7 +49,8 @@ game_team_yac <- pbp_db %>%
   dplyr::summarise(yac_drive = sum(yards_after_catch, na.rm = TRUE)) %>%
   dplyr::ungroup() %>%
   dplyr::group_by(game_id, posteam) %>%
-  dplyr::summarise(total_yac = sum(yac_drive, na.rm = TRUE), yac_drive_avg = sum(yac_drive, na.rm = TRUE)/n(), drive_count = n())
+  dplyr::summarise(total_yac = sum(yac_drive, na.rm = TRUE), yac_drive_avg = sum(yac_drive, na.rm = TRUE)/n(), drive_count = n()) %>% 
+  dplyr::compute()
 
 #calculate yac total and drive average breakdown by quarter
 game_team_yac_qtr <- pbp_db %>%
@@ -59,7 +60,8 @@ game_team_yac_qtr <- pbp_db %>%
   dplyr::ungroup() %>%
   dplyr::group_by(game_id, posteam, qtr) %>%
   dplyr::summarise(total_yac = sum(yac_drive, na.rm = TRUE), yac_drive_avg =  sum(yac_drive, na.rm = TRUE)/n(), drive_count = n()) %>%
-  pivot_wider(names_from = qtr, values_from = c(total_yac, yac_drive_avg, drive_count), names_glue = "{.value}_qtr_{qtr}")
+  pivot_wider(names_from = qtr, values_from = c(total_yac, yac_drive_avg, drive_count), names_glue = "{.value}_qtr_{qtr}") %>% 
+  dplyr::compute()
 
 #calculate the total time of possession and average time of possession of a drive for each team for a game
 game_team_pos_total_avg <- pbp_db %>%
@@ -72,7 +74,8 @@ game_team_pos_total_avg$drive_time_of_possession_in_sec <- lubridate::period_to_
 game_team_pos_total_avg <- game_team_pos_total_avg %>%
   dplyr::group_by(game_id, posteam) %>%
   dplyr::summarise(total_time_pos = sum(drive_time_of_possession_in_sec, na.rm = TRUE), avg_drive_time_pos = mean(drive_time_of_possession_in_sec, na.rm = TRUE)) %>%
-  dplyr::select(game_id, posteam, total_time_pos, avg_drive_time_pos)
+  dplyr::select(game_id, posteam, total_time_pos, avg_drive_time_pos) %>% 
+  dplyr::compute()
 
 #calculate total play count and average play count per drive for each team of a game
 game_team_play_count_avg <- pbp_db %>%
@@ -82,7 +85,8 @@ game_team_play_count_avg <- pbp_db %>%
   dplyr::ungroup() %>%
   dplyr::group_by(game_id, posteam) %>%
   dplyr::summarise(total_plays = sum(drive_play_count, na.rm = TRUE), avg_plays_per_drive = mean(drive_play_count, na.rm = TRUE)) %>%
-  dplyr::select(game_id, posteam, total_plays, avg_plays_per_drive)
+  dplyr::select(game_id, posteam, total_plays, avg_plays_per_drive) %>% 
+  dplyr::compute()
 
 #get total sacks and interceptions per game and per drive (defense)
 game_def_sacks_ints <- pbp_db %>%
@@ -95,7 +99,8 @@ game_def_sacks_ints <- pbp_db %>%
                                  avg_sacks_per_drive = mean(drive_sack_count, na.rm = TRUE),
                                  total_ints = sum(drive_int_count, na.rm = TRUE),
                                  avg_ints_per_drive = mean(drive_int_count, na.rm = TRUE)) %>%
-  dplyr::select(game_id, defteam, total_sacks, avg_sacks_per_drive, total_ints, avg_ints_per_drive)
+  dplyr::select(game_id, defteam, total_sacks, avg_sacks_per_drive, total_ints, avg_ints_per_drive) %>% 
+  dplyr::compute()
 
 #get total sacks allowed and interceptions thrown per game and per drive (offense)
 game_off_sacks_ints <- pbp_db %>%
@@ -108,7 +113,8 @@ game_off_sacks_ints <- pbp_db %>%
                                        avg_sacks_allow_per_drive = mean(drive_sack_allow_count, na.rm = TRUE),
                                        total_ints_throw = sum(drive_int_throw_count, na.rm = TRUE),
                                        avg_ints_throw_per_drive = mean(drive_int_throw_count, na.rm = TRUE)) %>%
-  dplyr::select(game_id, posteam, total_sacks_allow, avg_sacks_allow_per_drive, total_ints_throw, avg_ints_throw_per_drive)
+  dplyr::select(game_id, posteam, total_sacks_allow, avg_sacks_allow_per_drive, total_ints_throw, avg_ints_throw_per_drive) %>% 
+  dplyr::compute()
 
 #get the teams in each game and other info like the point differential and scores of the teams
 game_teams_and_info <- pbp_db %>%
@@ -120,7 +126,8 @@ game_teams_and_info <- pbp_db %>%
                    home_team = home_team, away_team = away_team,
                    home_score = home_score, away_score = away_score, result = result) %>%
   dplyr::select(game_id, home_team, away_team, home_score, away_score, result) %>%
-  dplyr::rename(point_differential = result)
+  dplyr::rename(point_differential = result) %>% 
+  dplyr::compute()
 
 #produce a result that has the info from game_teams_and_info,the offensive yards for each team, yac, play count and average play count per drive
 nfl_data_set <- game_teams_and_info %>%
@@ -141,6 +148,8 @@ nfl_data_set <- game_teams_and_info %>%
   dplyr::left_join(game_team_play_count_avg, by = c('game_id' = 'game_id', 'away_team' = 'posteam')) %>%
   rename(away_total_plays = total_plays, away_plays_per_drive = avg_plays_per_drive) %>%
   #TODO join def sack int
+  dplyr::left_join(game_def_sacks_ints, by = c('game_id' = 'game_id', 'home_team' = 'defteam')) %>% 
+  dplyr::left_join(game_def_sacks_ints, by = c('game_id' = 'game_id', 'away_team' = 'defteam'), suffix = c('_home', '_away')) %>% 
   #TODO join off sack int
   #TODO join off yards qtr breakdown
   #TODO join yac qtr breakdown
