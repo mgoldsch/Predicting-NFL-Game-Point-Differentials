@@ -9,3 +9,67 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Set Up
+
+### Packages
+
+```{r}
+library(tidyverse) #dplyr functions mainly
+library(DBI) #database
+library(RSQLite) #database
+library(tictoc) #timing code execution
+
+library(xgboost) # Load XGBoost
+library(caret) # Load Caret
+library(OptimalCutpoints) # Load optimal cutpoints
+library(ggplot2) # Load ggplot2
+library(xgboostExplainer) # Load XGboost Explainer
+library(pROC) # Load proc
+library(SHAPforxgboost) # Load shap for XGBoost
+```
+
+### Set Working Directory
+
+```{r}
+
+```
+
+### Connect to Database
+
+```{r}
+
+```
+
+### Get nfl_data_set table from the database
+```{r}
+
+```
+
+# Data Preparation
+
+### Select rows and columns from nfl_data_set we want for the model
+
+```{r}
+
+```
+
+### Convert data to DMatrix
+
+```{r}
+
+```
+
+# XGBoost Model
+
+### Train Model
+
+```{r}
+
+```
+
+### Variable Importance
+
+```{r}
+
+```
+
