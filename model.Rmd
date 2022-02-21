@@ -31,18 +31,19 @@ library(SHAPforxgboost) # Load shap for XGBoost
 ### Set Working Directory
 
 ```{r}
-
+wd <- dirname(sys.frame(1)$ofile) #gets the directory where this script is located
+setwd(wd) #sets the working directory to the directory of this script, this is so relative paths can be used below
 ```
 
 ### Connect to Database
 
 ```{r}
-
+connection <- DBI::dbConnect(RSQLite::SQLite(), "./data/pbp_db") #create connection for db
 ```
 
 ### Get nfl_data_set table from the database
 ```{r}
-
+nfl_data_set <- dplyr::tbl(connection, "nfl_data_set") #get the nfl_data_set table from the db
 ```
 
 # Data Preparation
