@@ -127,6 +127,9 @@ nfl_data_set <- game_teams_and_info %>%
   #add offensive yards
   dplyr::left_join(game_team_yards, by = c('game_id' = 'game_id', 'home_team' = 'posteam')) %>%
   dplyr::left_join(game_team_yards, by = c('game_id' = 'game_id', 'away_team' = 'posteam'), suffix = c("_home", "_away")) %>%
+  #add defensive allowed yards
+  dplyr::left_join(game_team_yards, by = c('game_id' = 'game_id', 'away_team' = 'posteam')) %>%
+  dplyr::left_join(game_team_yards, by = c('game_id' = 'game_id', 'home_team' = 'posteam'), suffix = c("_home_defense_allowed", "_away_defense_allowed")) %>%
   #add yac
   dplyr::left_join(game_team_yac, by = c('game_id' = 'game_id', 'home_team' = 'posteam')) %>%
   rename(home_yac = total_yac, home_yac_drive_avg = yac_drive_avg, home_drive_count = drive_count ) %>%
