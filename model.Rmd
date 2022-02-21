@@ -54,6 +54,12 @@ nfl_data_set <- dplyr::tbl(connection, "nfl_data_set") #get the nfl_data_set tab
 
 ```
 
+### Split data into training and testing
+
+```{r}
+
+```
+
 ### Convert data to DMatrix
 
 ```{r}
