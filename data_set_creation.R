@@ -148,13 +148,13 @@ nfl_data_set <- game_teams_and_info %>%
   rename(home_total_plays = total_plays, home_plays_per_drive = avg_plays_per_drive) %>%
   dplyr::left_join(game_team_play_count_avg, by = c('game_id' = 'game_id', 'away_team' = 'posteam')) %>%
   rename(away_total_plays = total_plays, away_plays_per_drive = avg_plays_per_drive) %>%
-  #TODO join def sack int
+  #join def sack int
   dplyr::left_join(game_def_sacks_ints, by = c('game_id' = 'game_id', 'home_team' = 'defteam')) %>% 
   dplyr::left_join(game_def_sacks_ints, by = c('game_id' = 'game_id', 'away_team' = 'defteam'), suffix = c('_home', '_away')) %>% 
-  #TODO join off sack int
+  #join off sack int
   dplyr::left_join(game_off_sacks_ints, by = c('game_id' = 'game_id', 'home_team' = 'posteam')) %>% 
   dplyr::left_join(game_off_sacks_ints, by = c('game_id' = 'game_id', 'away_team' = 'posteam'), suffix = c('_home', '_away')) %>% 
-  #TODO join yac qtr breakdown
+  #join yac qtr breakdown
   dplyr::collect()
 
 #write nfl_data_set to db
