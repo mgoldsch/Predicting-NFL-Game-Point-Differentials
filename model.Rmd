@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### Packages
 
-```{r}
+```{r, echo = FALSE}
 library(tidyverse) #dplyr functions mainly
 library(DBI) #database
 library(RSQLite) #database
@@ -31,8 +31,8 @@ library(SHAPforxgboost) # Load shap for XGBoost
 ### Set Working Directory
 
 ```{r}
-wd <- dirname(sys.frame(1)$ofile) #gets the directory where this script is located
-setwd(wd) #sets the working directory to the directory of this script, this is so relative paths can be used below
+#wd <- dirname(sys.frame(1)$ofile) #gets the directory where this script is located
+#setwd(wd) #sets the working directory to the directory of this script, this is so relative paths can be used below
 ```
 
 ### Connect to Database
@@ -51,19 +51,27 @@ nfl_data_set <- dplyr::tbl(connection, "nfl_data_set") #get the nfl_data_set tab
 ### Select rows and columns from nfl_data_set we want for the model
 
 ```{r}
-
+model_basic_data_use <- nfl_data_set %>% 
+  dplyr::filter(season %in% c(2021, 2020, 2019, 2018) & season_type == "REG") %>% 
+  dplyr::select(point_differential, season, week, 
+                home_score_5w_avg, off_pass_yards_tot_home_5w_avg, off_rush_yards_tot_home_5w_avg, 
+                away_score_5w_avg, off_pass_yards_tot_away_5w_avg, off_rush_yards_tot_away_5w_avg, 
+                home_point_differential_5w_avg, away_point_differential_5w_avg) %>% 
+  dplyr::collect()
 ```
 
 ### Split data into training and testing
 
 ```{r}
-
+train_basic <- model_basic_data_use[model_basic_data_use$season %in% c(2018, 2019, 2020), ]
+test_basic <- setdiff(model_basic_data_use, train_basic)
 ```
 
 ### Convert data to DMatrix
 
 ```{r}
-
+dtrain_basic <- xgb.DMatrix(data = as.matrix(train_basic))
+dtest_basic <- xgb.DMatrix(data = as.matrix(test_basic))
 ```
 
 # XGBoost Model
