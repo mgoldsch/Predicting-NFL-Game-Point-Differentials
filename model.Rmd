@@ -70,8 +70,8 @@ test_basic <- setdiff(model_basic_data_use, train_basic)
 ### Convert data to DMatrix
 
 ```{r}
-dtrain_basic <- xgb.DMatrix(data = as.matrix(train_basic))
-dtest_basic <- xgb.DMatrix(data = as.matrix(test_basic))
+dtrain_basic <- xgb.DMatrix(data = as.matrix(train_basic[, -1]), label = train_basic$point_differential)
+dtest_basic <- xgb.DMatrix(data = as.matrix(test_basic[, -1]), label = test_basic$point_differential)
 ```
 
 # XGBoost Model
@@ -79,12 +79,20 @@ dtest_basic <- xgb.DMatrix(data = as.matrix(test_basic))
 ### Train Model
 
 ```{r}
-
+set.seed(111111)
+model_basic <- xgboost(data = dtrain_basic, #set training data
+                      nrounds = 100, #set number of rounds
+                      verbose = 1, #prints out fit
+                      print_every_n = 20 #prints out result every 20th iteration
+                      )
 ```
 
 ### Variable Importance
 
 ```{r}
-
+# Extract importance
+imp_mat <- xgb.importance(model = model_basic)
+# Plot importance (top 10 variables)
+xgb.plot.importance(imp_mat, top_n = 10)
 ```
 
