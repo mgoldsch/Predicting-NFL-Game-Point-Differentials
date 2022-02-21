@@ -95,4 +95,13 @@ imp_mat <- xgb.importance(model = model_basic)
 # Plot importance (top 10 variables)
 xgb.plot.importance(imp_mat, top_n = 10)
 ```
+### Test Model
+
+```{r}
+library(Metrics)
+
+basic_model_preds <- predict(model_basic, dtest_basic)
+
+rmse(test_basic$point_differential, basic_model_preds)
+```
 
