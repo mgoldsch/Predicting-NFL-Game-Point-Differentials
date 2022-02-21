@@ -74,8 +74,7 @@ game_team_pos_total_avg$drive_time_of_possession_in_sec <- lubridate::period_to_
 game_team_pos_total_avg <- game_team_pos_total_avg %>%
   dplyr::group_by(game_id, posteam) %>%
   dplyr::summarise(total_time_pos = sum(drive_time_of_possession_in_sec, na.rm = TRUE), avg_drive_time_pos = mean(drive_time_of_possession_in_sec, na.rm = TRUE)) %>%
-  dplyr::select(game_id, posteam, total_time_pos, avg_drive_time_pos) %>% 
-  dplyr::compute()
+  dplyr::select(game_id, posteam, total_time_pos, avg_drive_time_pos)
 
 #calculate total play count and average play count per drive for each team of a game
 game_team_play_count_avg <- pbp_db %>%
@@ -142,6 +141,8 @@ nfl_data_set <- game_teams_and_info %>%
   rename(home_yac = total_yac, home_yac_drive_avg = yac_drive_avg, home_drive_count = drive_count ) %>%
   dplyr::left_join(game_team_yac, by = c('game_id' = 'game_id', 'away_team' = 'posteam')) %>%
   rename(away_yac = total_yac, away_yac_drive_avg = yac_drive_avg, away_drive_count = drive_count) %>%
+  #compute to avoid parser stack overflow error
+  dplyr::compute() %>% 
   #add play count and average play count per drive
   dplyr::left_join(game_team_play_count_avg, by = c('game_id' = 'game_id', 'home_team' = 'posteam')) %>%
   rename(home_total_plays = total_plays, home_plays_per_drive = avg_plays_per_drive) %>%
@@ -151,7 +152,8 @@ nfl_data_set <- game_teams_and_info %>%
   dplyr::left_join(game_def_sacks_ints, by = c('game_id' = 'game_id', 'home_team' = 'defteam')) %>% 
   dplyr::left_join(game_def_sacks_ints, by = c('game_id' = 'game_id', 'away_team' = 'defteam'), suffix = c('_home', '_away')) %>% 
   #TODO join off sack int
-  #TODO join off yards qtr breakdown
+  dplyr::left_join(game_off_sacks_ints, by = c('game_id' = 'game_id', 'home_team' = 'posteam')) %>% 
+  dplyr::left_join(game_off_sacks_ints, by = c('game_id' = 'game_id', 'away_team' = 'posteam'), suffix = c('_home', '_away')) %>% 
   #TODO join yac qtr breakdown
   dplyr::collect()
 
