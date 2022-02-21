@@ -122,12 +122,12 @@ game_off_sacks_ints <- pbp_db %>%
 game_teams_and_info <- pbp_db %>%
   dplyr::group_by(game_id) %>%
   dplyr::summarise(season = season, week = week, season_type = season_type, game_date = game_date,
-                   start_time = start_time, roof = roof, surface = surface, weather = weather,
-                   stadium = stadium, game_stadium = game_stadium,
+                   start_time = start_time, roof = roof, surface = surface, weather = weather, game_stadium = game_stadium,
                    home_coach = home_coach, away_coach = away_coach,
                    home_team = home_team, away_team = away_team,
                    home_score = home_score, away_score = away_score, result = result) %>%
-  dplyr::select(game_id, home_team, away_team, home_score, away_score, result) %>%
+  dplyr::select(game_id, season, week, season_type, game_date, start_time, roof, surface, weather, game_stadium, 
+                home_team, away_team, home_score, away_score, result, home_coach, away_coach) %>%
   dplyr::rename(point_differential = result) %>%
   dplyr::compute()
 
