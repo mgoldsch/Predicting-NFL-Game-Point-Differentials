@@ -451,3 +451,83 @@ rmse(test_6$point_differential, model_6_preds)
 
 Probably not worth including
 
+Actually, after talking to Martin I can just throw in all the variaables and XGBoost will drop ones that aren't useful. Can explore lambda values for penalization.
+
+# Big Model
+
+### Data Preparation
+
+#### Select rows and columns from nfl_data_set we want for the model
+
+```{r}
+model_big_data_use <- nfl_data_set %>% 
+  dplyr::filter(season %in% c(2021, 2020, 2019, 2018) & season_type == "REG") %>% 
+  dplyr::select(point_differential, season, week, home_coach, away_coach, roof, surface, start_time,
+                home_score_5w_avg, off_pass_yards_tot_home_5w_avg, off_rush_yards_tot_home_5w_avg, 
+                away_score_5w_avg, off_pass_yards_tot_away_5w_avg, off_rush_yards_tot_away_5w_avg, 
+                home_point_differential_5w_avg, away_point_differential_5w_avg, 
+                off_passing_yards_qtr_1_home_5w_avg, off_passing_yards_qtr_2_home_5w_avg, off_passing_yards_qtr_3_home_5w_avg, 
+                off_passing_yards_qtr_4_home_5w_avg, off_rushing_yards_qtr_1_home_5w_avg, 
+                off_rushing_yards_qtr_2_home_5w_avg, off_rushing_yards_qtr_3_home_5w_avg, off_rushing_yards_qtr_4_home_5w_avg) %>% 
+  dplyr::collect()
+```
+
+#### Dummies
+
+```{r}
+#create dummies for home_coach and away_coach
+library(fastDummies)
+model_big_data_use <- dummy_cols(model_big_data_use, select_columns = c("home_coach", "away_coach", "roof", "surface", "start_time"))
+```
+
+#### Split data into training and testing
+
+```{r}
+train_big <- model_big_data_use[model_basic_data_use$season %in% c(2018, 2019, 2020), ]
+test_big <- setdiff(model_big_data_use, train_big)
+```
+
+### Convert data to DMatrix
+
+```{r}
+dtrain_big <- xgb.DMatrix(data = as.matrix(train_big[, -c(1,4:8)]), label = train_big$point_differential)
+dtest_big <- xgb.DMatrix(data = as.matrix(test_big[, -c(1, 4:8)]), label = test_big$point_differential)
+```
+
+### XGBoost Model
+
+#### Train Model
+
+```{r}
+set.seed(111111)
+model_big <- xgboost(data = dtrain_big, #set training data
+                      nrounds = 100, #set number of rounds
+                      verbose = 1, #prints out fit
+                      print_every_n = 20 #prints out result every 20th iteration
+                      )
+```
+
+#### Variable Importance
+
+```{r}
+# Extract importance
+imp_mat <- xgb.importance(model = model_big)
+# Plot importance (top 10 variables)
+xgb.plot.importance(imp_mat, top_n = 20)
+```
+#### Test Model
+
+```{r}
+library(Metrics)
+
+big_model_preds <- predict(model_big, dtest_big)
+
+rmse(test_big$point_differential, big_model_preds)
+```
+
+#### Plot Actual vs Predicted
+
+```{r}
+plot(test_big$point_differential, big_model_preds)
+```
+
