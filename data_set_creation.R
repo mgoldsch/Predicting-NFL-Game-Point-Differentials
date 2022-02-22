@@ -203,8 +203,8 @@ teams <- dplyr::tbl(connection, "nfl_data_set") %>% #get list of teams
   dplyr::pull()
 
 nfl_rollmeans <- dplyr::tbl(connection, "nfl_data_set") %>% #get the nfl_data_set table from the db
-  dplyr::select(game_id, home_team, away_team, home_score, away_score, point_differential, 
-                off_pass_yards_tot_home, off_rush_yards_tot_home, off_pass_yards_tot_away, off_rush_yards_tot_away) %>% #select columns to consider
+  #dplyr::select(game_id, home_team, away_team, home_score, away_score, point_differential, 
+   #             off_pass_yards_tot_home, off_rush_yards_tot_home, off_pass_yards_tot_away, off_rush_yards_tot_away) %>% #select columns to consider
   dplyr::collect()
 
 wl = 5 #setting week lap to 5
