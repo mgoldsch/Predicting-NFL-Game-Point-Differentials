@@ -53,6 +53,7 @@ game_team_yac <- pbp_db %>%
   dplyr::ungroup() %>%
   dplyr::group_by(game_id, posteam) %>%
   dplyr::summarise(total_yac = sum(yac_drive, na.rm = TRUE), yac_drive_avg = sum(yac_drive, na.rm = TRUE)/n(), drive_count = n()) %>%
+  dplyr::select(-c(drive_count)) %>% 
   dplyr::compute()
 
 #calculate yac total and drive average breakdown by quarter
@@ -141,9 +142,9 @@ nfl_data_set <- game_teams_and_info %>%
   dplyr::left_join(game_team_yards, by = c('game_id' = 'game_id', 'home_team' = 'posteam'), suffix = c("_home_defense_allowed", "_away_defense_allowed")) %>%
   #add yac
   dplyr::left_join(game_team_yac, by = c('game_id' = 'game_id', 'home_team' = 'posteam')) %>%
-  rename(home_yac = total_yac, home_yac_drive_avg = yac_drive_avg, home_drive_count = drive_count ) %>%
+  rename(home_yac = total_yac, home_yac_drive_avg = yac_drive_avg) %>%
   dplyr::left_join(game_team_yac, by = c('game_id' = 'game_id', 'away_team' = 'posteam')) %>%
-  rename(away_yac = total_yac, away_yac_drive_avg = yac_drive_avg, away_drive_count = drive_count) %>%
+  rename(away_yac = total_yac, away_yac_drive_avg = yac_drive_avg) %>%
   #compute to avoid parser stack overflow error
   dplyr::compute() %>%
   #add play count and average play count per drive
