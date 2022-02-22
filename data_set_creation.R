@@ -216,14 +216,18 @@ met_h <- c("home_score", "off_pass_yards_tot_home", "off_rush_yards_tot_home",
            "off_passing_yards_qtr_1_home", "off_passing_yards_qtr_2_home", 
            "off_passing_yards_qtr_3_home", "off_passing_yards_qtr_4_home", 
            "off_rushing_yards_qtr_1_home", "off_rushing_yards_qtr_2_home", 
-           "off_rushing_yards_qtr_3_home", "off_rushing_yards_qtr_4_home") #vector of varialbes to apply rollmeans to (home varaibles)
+           "off_rushing_yards_qtr_3_home", "off_rushing_yards_qtr_4_home", 
+           "home_yac", "total_yac_qtr_1_home", "total_yac_qtr_2_home", "total_yac_qtr_3_home", "total_yac_qtr_4_home", 
+           "home_total_plays", "total_sacks_home", "total_ints_home", "total_sacks_allow_home", "total_ints_throw_home", "home_total_time_pos") #vector of varialbes to apply rollmeans to (home varaibles)
 met_h <- c(met_h, sapply(met_h[2:11], function(x){paste0(x, "_defense_allowed")}, USE.NAMES = FALSE)) #create defense allowed variable names
 
 met_a <- c("away_score", "off_pass_yards_tot_away", "off_rush_yards_tot_away", 
            "off_passing_yards_qtr_1_away", "off_passing_yards_qtr_2_away", 
            "off_passing_yards_qtr_3_away", "off_passing_yards_qtr_4_away", 
            "off_rushing_yards_qtr_1_away", "off_rushing_yards_qtr_2_away", 
-           "off_rushing_yards_qtr_3_away", "off_rushing_yards_qtr_4_away") #vector of varialbes to apply rollmeans to (away varaibles)
+           "off_rushing_yards_qtr_3_away", "off_rushing_yards_qtr_4_away", 
+           "away_yac", "total_yac_qtr_1_away", "total_yac_qtr_2_away", "total_yac_qtr_3_away", "total_yac_qtr_4_away", 
+           "away_total_plays", "total_sacks_away", "total_ints_away", "total_sacks_allow_away", "total_ints_throw_away", "away_total_time_pos") #vector of varialbes to apply rollmeans to (away varaibles)
 met_a <- c(met_a, sapply(met_a[2:11], function(x){paste0(x, "_defense_allowed")}, USE.NAMES = FALSE)) #create defense allowed variable names
 
 rm_names_met_h <- sapply(met_h, function(x){paste0(x, "_", wl, "w_avg")}, USE.NAMES = FALSE) #vector of names the new variables will be (home variables)
