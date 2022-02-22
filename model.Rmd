@@ -390,3 +390,64 @@ model_5_preds <- predict(model_5, dtest_5)
 
 rmse(test_5$point_differential, model_5_preds)
 ```
+
+### Start Time
+
+```{r}
+#get data
+model_6_data <- nfl_data_set %>% 
+  dplyr::filter(season %in% c(2021, 2020, 2019, 2018) & season_type == "REG") %>% 
+  dplyr::select(point_differential, season, week, start_time,
+                home_score_5w_avg, off_pass_yards_tot_home_5w_avg, off_rush_yards_tot_home_5w_avg, 
+                away_score_5w_avg, off_pass_yards_tot_away_5w_avg, off_rush_yards_tot_away_5w_avg, 
+                home_point_differential_5w_avg, away_point_differential_5w_avg) %>% 
+  dplyr::collect()
+```
+
+```{r}
+#create dummies for home_coach and away_coach
+library(fastDummies)
+model_6_data <- dummy_cols(model_6_data, select_columns = "start_time")
+```
+
+```{r}
+#Split data into train and test
+train_6 <- model_6_data[model_6_data$season %in% c(2018, 2019, 2020), ]
+test_6 <- setdiff(model_6_data, train_6)
+```
+
+```{r}
+#Convert data to DMatrix
+dtrain_6 <- xgb.DMatrix(data = as.matrix(train_6[, -c(1,4)]), label = train_6$point_differential)
+dtest_6 <- xgb.DMatrix(data = as.matrix(test_6[, -c(1,4)]), label = test_6$point_differential)
+```
+
+```{r}
+#Train model
+set.seed(111111)
+model_6 <- xgboost(data = dtrain_6, #set training data
+                      nrounds = 100, #set number of rounds
+                      verbose = 1, #prints out fit
+                      print_every_n = 20 #prints out result every 20th iteration
+                      )
+```
+
+```{r}
+# Extract importance
+imp_mat <- xgb.importance(model = model_6)
+# Plot importance (top 10 variables)
+xgb.plot.importance(imp_mat, top_n = 20)
+
+```
+
+```{r}
+#Test model
+library(Metrics)
+
+model_6_preds <- predict(model_6, dtest_6)
+
+rmse(test_6$point_differential, model_6_preds)
+```
+
+Probably not worth including
+
