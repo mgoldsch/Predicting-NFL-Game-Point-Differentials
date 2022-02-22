@@ -214,11 +214,14 @@ met_h <- c("home_score", "off_pass_yards_tot_home", "off_rush_yards_tot_home",
            "off_passing_yards_qtr_3_home", "off_passing_yards_qtr_4_home", 
            "off_rushing_yards_qtr_1_home", "off_rushing_yards_qtr_2_home", 
            "off_rushing_yards_qtr_3_home", "off_rushing_yards_qtr_4_home") #vector of varialbes to apply rollmeans to (home varaibles)
+met_h <- c(met_h, sapply(met_h[2:11], function(x){paste0(x, "_defense_allowed")}, USE.NAMES = FALSE)) #create defense allowed variable names
+
 met_a <- c("away_score", "off_pass_yards_tot_away", "off_rush_yards_tot_away", 
            "off_passing_yards_qtr_1_away", "off_passing_yards_qtr_2_away", 
            "off_passing_yards_qtr_3_away", "off_passing_yards_qtr_4_away", 
            "off_rushing_yards_qtr_1_away", "off_rushing_yards_qtr_2_away", 
            "off_rushing_yards_qtr_3_away", "off_rushing_yards_qtr_4_away") #vector of varialbes to apply rollmeans to (away varaibles)
+met_a <- c(met_a, sapply(met_a[2:11], function(x){paste0(x, "_defense_allowed")}, USE.NAMES = FALSE)) #create defense allowed variable names
 
 rm_names_met_h <- sapply(met_h, function(x){paste0(x, "_", wl, "w_avg")}, USE.NAMES = FALSE) #vector of names the new variables will be (home variables)
 rm_names_met_a <- sapply(met_a, function(x){paste0(x, "_", wl, "w_avg")}, USE.NAMES = FALSE) #vector of names the new variables will be (away variables)
