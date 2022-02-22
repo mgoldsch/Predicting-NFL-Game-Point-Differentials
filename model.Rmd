@@ -348,7 +348,10 @@ model_5_data <- nfl_data_set %>%
                 home_point_differential_5w_avg, away_point_differential_5w_avg, 
                 off_passing_yards_qtr_1_home_5w_avg, off_passing_yards_qtr_2_home_5w_avg, off_passing_yards_qtr_3_home_5w_avg, 
                 off_passing_yards_qtr_4_home_5w_avg, off_rushing_yards_qtr_1_home_5w_avg, 
-                off_rushing_yards_qtr_2_home_5w_avg, off_rushing_yards_qtr_3_home_5w_avg, off_rushing_yards_qtr_4_home_5w_avg) %>% 
+                off_rushing_yards_qtr_2_home_5w_avg, off_rushing_yards_qtr_3_home_5w_avg, off_rushing_yards_qtr_4_home_5w_avg, 
+                off_passing_yards_qtr_1_away_5w_avg, off_passing_yards_qtr_2_away_5w_avg, off_passing_yards_qtr_3_away_5w_avg, 
+                off_passing_yards_qtr_4_away_5w_avg, off_rushing_yards_qtr_1_away_5w_avg, 
+                off_rushing_yards_qtr_2_away_5w_avg, off_rushing_yards_qtr_3_away_5w_avg, off_rushing_yards_qtr_4_away_5w_avg) %>% 
   dplyr::collect()
 ```
 
@@ -468,7 +471,20 @@ model_big_data_use <- nfl_data_set %>%
                 home_point_differential_5w_avg, away_point_differential_5w_avg, 
                 off_passing_yards_qtr_1_home_5w_avg, off_passing_yards_qtr_2_home_5w_avg, off_passing_yards_qtr_3_home_5w_avg, 
                 off_passing_yards_qtr_4_home_5w_avg, off_rushing_yards_qtr_1_home_5w_avg, 
-                off_rushing_yards_qtr_2_home_5w_avg, off_rushing_yards_qtr_3_home_5w_avg, off_rushing_yards_qtr_4_home_5w_avg) %>% 
+                off_rushing_yards_qtr_2_home_5w_avg, off_rushing_yards_qtr_3_home_5w_avg, off_rushing_yards_qtr_4_home_5w_avg,
+                off_passing_yards_qtr_1_away_5w_avg, off_passing_yards_qtr_2_away_5w_avg, off_passing_yards_qtr_3_away_5w_avg,
+                off_passing_yards_qtr_4_away_5w_avg, off_rushing_yards_qtr_1_away_5w_avg, off_rushing_yards_qtr_2_away_5w_avg,
+                off_rushing_yards_qtr_3_away_5w_avg, off_rushing_yards_qtr_4_away_5w_avg, 
+                off_pass_yards_tot_home_defense_allowed, off_rush_yards_tot_home_defense_allowed, off_passing_yards_qtr_1_home_defense_allowed,
+                off_passing_yards_qtr_2_home_defense_allowed,off_passing_yards_qtr_3_home_defense_allowed,
+                off_passing_yards_qtr_4_home_defense_allowed,off_rushing_yards_qtr_1_home_defense_allowed,
+                off_rushing_yards_qtr_2_home_defense_allowed, off_rushing_yards_qtr_3_home_defense_allowed,
+                off_rushing_yards_qtr_4_home_defense_allowed, 
+                off_pass_yards_tot_away_defense_allowed, off_rush_yards_tot_away_defense_allowed, off_passing_yards_qtr_1_away_defense_allowed,
+                off_passing_yards_qtr_2_away_defense_allowed,off_passing_yards_qtr_3_away_defense_allowed,
+                off_passing_yards_qtr_4_away_defense_allowed,off_rushing_yards_qtr_1_away_defense_allowed,
+                off_rushing_yards_qtr_2_away_defense_allowed, off_rushing_yards_qtr_3_away_defense_allowed,
+                off_rushing_yards_qtr_4_away_defense_allowed) %>% 
   dplyr::collect()
 ```
 
