@@ -347,8 +347,8 @@ model_5_data <- nfl_data_set %>%
                 away_score_5w_avg, off_pass_yards_tot_away_5w_avg, off_rush_yards_tot_away_5w_avg, 
                 home_point_differential_5w_avg, away_point_differential_5w_avg, 
                 off_passing_yards_qtr_1_home_5w_avg, off_passing_yards_qtr_2_home_5w_avg, off_passing_yards_qtr_3_home_5w_avg, 
-                off_passing_yards_qtr_4_home_5w_avg, off_passing_yards_qtr_5_home_5w_avg, off_rushing_yards_qtr_1_home_5w_avg, 
-                off_rushing_yards_qtr_2_home_5w_avg, off_rushing_yards_qtr_3_home_5w_avg, off_rushing_yards_qtr_4_home_5w_avg, off_rushing_yards_qtr_5_home_5w_avg) %>% 
+                off_passing_yards_qtr_4_home_5w_avg, off_rushing_yards_qtr_1_home_5w_avg, 
+                off_rushing_yards_qtr_2_home_5w_avg, off_rushing_yards_qtr_3_home_5w_avg, off_rushing_yards_qtr_4_home_5w_avg) %>% 
   dplyr::collect()
 ```
 
