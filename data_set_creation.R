@@ -38,7 +38,7 @@ game_team_yards <- pbp_db %>%
   pivot_wider(names_from = qtr,
               values_from = c(off_passing_yards, off_rushing_yards, off_pass_yds_drive_avg, off_rush_yds_drive_avg, drive_count),
               names_glue = "{.value}_qtr_{qtr}") %>%
-  dplyr::select(-c(total_drives, drive_count_qtr_1, drive_count_qtr_2, drive_count_qtr_3, drive_count_qtr_4)) %>%
+  #dplyr::select(-c(total_drives, drive_count_qtr_1, drive_count_qtr_2, drive_count_qtr_3, drive_count_qtr_4)) %>%
   dplyr::compute()
 
 #calculate the offensive passing yards per pass attempt for each team for a game (and breakdown by quarter) TODO
