@@ -474,7 +474,7 @@ model_big_data_use <- nfl_data_set %>%
                 off_rushing_yards_qtr_2_home_5w_avg, off_rushing_yards_qtr_3_home_5w_avg, off_rushing_yards_qtr_4_home_5w_avg,
                 off_passing_yards_qtr_1_away_5w_avg, off_passing_yards_qtr_2_away_5w_avg, off_passing_yards_qtr_3_away_5w_avg,
                 off_passing_yards_qtr_4_away_5w_avg, off_rushing_yards_qtr_1_away_5w_avg, off_rushing_yards_qtr_2_away_5w_avg,
-                off_rushing_yards_qtr_3_away_5w_avg, off_rushing_yards_qtr_4_away_5w_avg, 
+                off_rushing_yards_qtr_3_away_5w_avg, off_rushing_yards_qtr_4_away_5w_avg, #rmse 11.008 with only these, rmse 11.178 when including these...likely due to model not being tuned and more vars cause defaults to be less good?
                 home_yac_5w_avg, total_yac_qtr_1_home_5w_avg, total_yac_qtr_2_home_5w_avg, total_yac_qtr_3_home_5w_avg,
                 total_yac_qtr_4_home_5w_avg, home_total_plays_5w_avg, total_sacks_home_5w_avg, total_ints_home_5w_avg,
                 total_sacks_allow_home_5w_avg, total_ints_throw_home_5w_avg, home_total_time_pos_5w_avg,
@@ -482,7 +482,7 @@ model_big_data_use <- nfl_data_set %>%
                 off_passing_yards_qtr_1_home_defense_allowed_5w_avg, off_passing_yards_qtr_2_home_defense_allowed_5w_avg,
                 off_passing_yards_qtr_3_home_defense_allowed_5w_avg, off_passing_yards_qtr_4_home_defense_allowed_5w_avg,
                 off_rushing_yards_qtr_1_home_defense_allowed_5w_avg, off_rushing_yards_qtr_2_home_defense_allowed_5w_avg,
-                off_rushing_yards_qtr_3_home_defense_allowed_5w_avg, off_rushing_yards_qtr_4_home_defense_allowed_5w_avg, 
+                off_rushing_yards_qtr_3_home_defense_allowed_5w_avg, off_rushing_yards_qtr_4_home_defense_allowed_5w_avg,
                 away_yac_5w_avg, total_yac_qtr_1_away_5w_avg, total_yac_qtr_2_away_5w_avg, total_yac_qtr_3_away_5w_avg,
                 total_yac_qtr_4_away_5w_avg, away_total_plays_5w_avg, total_sacks_away_5w_avg, total_ints_away_5w_avg,
                 total_sacks_allow_away_5w_avg, total_ints_throw_away_5w_avg, away_total_time_pos_5w_avg,
@@ -490,7 +490,7 @@ model_big_data_use <- nfl_data_set %>%
                 off_passing_yards_qtr_1_away_defense_allowed_5w_avg, off_passing_yards_qtr_2_away_defense_allowed_5w_avg,
                 off_passing_yards_qtr_3_away_defense_allowed_5w_avg, off_passing_yards_qtr_4_away_defense_allowed_5w_avg,
                 off_rushing_yards_qtr_1_away_defense_allowed_5w_avg, off_rushing_yards_qtr_2_away_defense_allowed_5w_avg,
-                off_rushing_yards_qtr_3_away_defense_allowed_5w_avg, off_rushing_yards_qtr_4_away_defense_allowed_5w_avg) %>% 
+                off_rushing_yards_qtr_3_away_defense_allowed_5w_avg, off_rushing_yards_qtr_4_away_defense_allowed_5w_avg) %>%
   dplyr::collect()
 ```
 
