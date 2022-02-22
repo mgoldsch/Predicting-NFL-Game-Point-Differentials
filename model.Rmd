@@ -464,7 +464,7 @@ Actually, after talking to Martin I can just throw in all the variaables and XGB
 
 ```{r}
 model_big_data_use <- nfl_data_set %>% 
-  dplyr::filter(season %in% c(2021, 2020, 2019, 2018) & season_type == "REG") %>% 
+  dplyr::filter(season_type == "REG") %>% 
   dplyr::select(point_differential, season, week, home_coach, away_coach, roof, surface, start_time,
                 home_score_5w_avg, off_pass_yards_tot_home_5w_avg, off_rush_yards_tot_home_5w_avg, 
                 away_score_5w_avg, off_pass_yards_tot_away_5w_avg, off_rush_yards_tot_away_5w_avg, 
@@ -505,7 +505,7 @@ model_big_data_use <- dummy_cols(model_big_data_use, select_columns = c("home_co
 #### Split data into training and testing
 
 ```{r}
-train_big <- model_big_data_use[model_basic_data_use$season %in% c(2018, 2019, 2020), ]
+train_big <- filter(model_big_data_use, season %in% seq(1999, 2015))
 test_big <- setdiff(model_big_data_use, train_big)
 ```
 
@@ -522,11 +522,13 @@ dtest_big <- xgb.DMatrix(data = as.matrix(test_big[, -c(1, 4:8)]), label = test_
 
 ```{r}
 set.seed(111111)
+tic()
 model_big <- xgboost(data = dtrain_big, #set training data
                       nrounds = 100, #set number of rounds
                       verbose = 1, #prints out fit
                       print_every_n = 20 #prints out result every 20th iteration
                       )
+toc()
 ```
 
 #### Variable Importance
@@ -550,6 +552,8 @@ rmse(test_big$point_differential, big_model_preds)
 #### Plot Actual vs Predicted
 
 ```{r}
-plot(test_big$point_differential, big_model_preds)
+par(pty = "s")
+plot(big_model_preds, test_big$point_differential, asp = 1) #flip axes back
+abline(a = 0, b = 1)
 ```
 
