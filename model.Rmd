@@ -105,3 +105,233 @@ basic_model_preds <- predict(model_basic, dtest_basic)
 rmse(test_basic$point_differential, basic_model_preds)
 ```
 
+# Introduce more variables
+
+### Coaches
+
+```{r}
+#get data
+model_2_data <- nfl_data_set %>% 
+  dplyr::filter(season %in% c(2021, 2020, 2019, 2018) & season_type == "REG") %>% 
+  dplyr::select(point_differential, season, week, home_coach, away_coach,
+                home_score_5w_avg, off_pass_yards_tot_home_5w_avg, off_rush_yards_tot_home_5w_avg, 
+                away_score_5w_avg, off_pass_yards_tot_away_5w_avg, off_rush_yards_tot_away_5w_avg, 
+                home_point_differential_5w_avg, away_point_differential_5w_avg) %>% 
+  dplyr::collect()
+```
+
+```{r}
+#create dummies for home_coach and away_coach
+library(fastDummies)
+model_2_data <- dummy_cols(model_2_data, select_columns = c("home_coach", "away_coach"))
+```
+
+```{r}
+#Split data into train and test
+train_2 <- model_2_data[model_2_data$season %in% c(2018, 2019, 2020), ]
+test_2 <- setdiff(model_2_data, train_2)
+```
+
+```{r}
+#Convert data to DMatrix
+dtrain_2 <- xgb.DMatrix(data = as.matrix(train_2[, -c(1,4,5)]), label = train_2$point_differential)
+dtest_2 <- xgb.DMatrix(data = as.matrix(test_2[, -c(1,4,5)]), label = test_2$point_differential)
+```
+
+```{r}
+#Train model
+set.seed(111111)
+model_2 <- xgboost(data = dtrain_2, #set training data
+                      nrounds = 100, #set number of rounds
+                      verbose = 1, #prints out fit
+                      print_every_n = 20 #prints out result every 20th iteration
+                      )
+```
+
+```{r}
+# Extract importance
+imp_mat <- xgb.importance(model = model_2)
+# Plot importance (top 10 variables)
+xgb.plot.importance(imp_mat, top_n = 20)
+
+```
+
+```{r}
+#Test model
+library(Metrics)
+
+model_2_preds <- predict(model_2, dtest_2)
+
+rmse(test_2$point_differential, model_2_preds)
+```
+  
+May be worth adding the Sith Lord...
+
+### Adding just Bill Belichick
+
+```{r}
+#get data
+model_bb_data <- model_2_data[, c(1:3, 6:13)]
+model_bb_data <- cbind(model_bb_data, model_2_data[, "away_coach_Bill Belichick"])
+```
+
+```{r}
+#Split data into train and test
+train_bb <- model_bb_data[model_bb_data$season %in% c(2018, 2019, 2020), ]
+test_bb <- setdiff(model_bb_data, train_bb)
+```
+
+```{r}
+#Convert data to DMatrix
+dtrain_bb <- xgb.DMatrix(data = as.matrix(train_bb[, -1]), label = train_bb$point_differential)
+dtest_bb <- xgb.DMatrix(data = as.matrix(test_bb[, -1]), label = test_bb$point_differential)
+```
+
+```{r}
+#Train model
+set.seed(111111)
+model_bb <- xgboost(data = dtrain_bb, #set training data
+                      nrounds = 100, #set number of rounds
+                      verbose = 1, #prints out fit
+                      print_every_n = 20 #prints out result every 20th iteration
+                      )
+```
+
+```{r}
+# Extract importance
+imp_mat <- xgb.importance(model = model_bb)
+# Plot importance (top 10 variables)
+xgb.plot.importance(imp_mat, top_n = 20)
+
+```
+
+```{r}
+#Test model
+library(Metrics)
+
+model_bb_preds <- predict(model_bb, dtest_bb)
+
+rmse(test_bb$point_differential, model_bb_preds)
+```
+
+The Sith Lord does not improve model performance. Do not include
+
+### Roof
+
+```{r}
+#get data
+model_3_data <- nfl_data_set %>% 
+  dplyr::filter(season %in% c(2021, 2020, 2019, 2018) & season_type == "REG") %>% 
+  dplyr::select(point_differential, season, week, roof,
+                home_score_5w_avg, off_pass_yards_tot_home_5w_avg, off_rush_yards_tot_home_5w_avg, 
+                away_score_5w_avg, off_pass_yards_tot_away_5w_avg, off_rush_yards_tot_away_5w_avg, 
+                home_point_differential_5w_avg, away_point_differential_5w_avg) %>% 
+  dplyr::collect()
+```
+
+```{r}
+#create dummies for home_coach and away_coach
+library(fastDummies)
+model_3_data <- dummy_cols(model_3_data, select_columns = "roof")
+```
+
+```{r}
+#Split data into train and test
+train_3 <- model_3_data[model_3_data$season %in% c(2018, 2019, 2020), ]
+test_3 <- setdiff(model_3_data, train_3)
+```
+
+```{r}
+#Convert data to DMatrix
+dtrain_3 <- xgb.DMatrix(data = as.matrix(train_3[, -c(1,4)]), label = train_3$point_differential)
+dtest_3 <- xgb.DMatrix(data = as.matrix(test_3[, -c(1,4)]), label = test_3$point_differential)
+```
+
+```{r}
+#Train model
+set.seed(111111)
+model_3 <- xgboost(data = dtrain_3, #set training data
+                      nrounds = 100, #set number of rounds
+                      verbose = 1, #prints out fit
+                      print_every_n = 20 #prints out result every 20th iteration
+                      )
+```
+
+```{r}
+# Extract importance
+imp_mat <- xgb.importance(model = model_3)
+# Plot importance (top 10 variables)
+xgb.plot.importance(imp_mat, top_n = 20)
+
+```
+
+```{r}
+#Test model
+library(Metrics)
+
+model_3_preds <- predict(model_3, dtest_3)
+
+rmse(test_3$point_differential, model_3_preds)
+```
+
+Worse than original. Don't add
+
+### Surface
+
+```{r}
+#get data
+model_4_data <- nfl_data_set %>% 
+  dplyr::filter(season %in% c(2021, 2020, 2019, 2018) & season_type == "REG") %>% 
+  dplyr::select(point_differential, season, week, surface,
+                home_score_5w_avg, off_pass_yards_tot_home_5w_avg, off_rush_yards_tot_home_5w_avg, 
+                away_score_5w_avg, off_pass_yards_tot_away_5w_avg, off_rush_yards_tot_away_5w_avg, 
+                home_point_differential_5w_avg, away_point_differential_5w_avg) %>% 
+  dplyr::collect()
+```
+
+```{r}
+#create dummies for home_coach and away_coach
+library(fastDummies)
+model_4_data <- dummy_cols(model_4_data, select_columns = "surface")
+```
+
+```{r}
+#Split data into train and test
+train_4 <- model_4_data[model_4_data$season %in% c(2018, 2019, 2020), ]
+test_4 <- setdiff(model_4_data, train_4)
+```
+
+```{r}
+#Convert data to DMatrix
+dtrain_4 <- xgb.DMatrix(data = as.matrix(train_4[, -c(1,4)]), label = train_4$point_differential)
+dtest_4 <- xgb.DMatrix(data = as.matrix(test_4[, -c(1,4)]), label = test_4$point_differential)
+```
+
+```{r}
+#Train model
+set.seed(111111)
+model_4 <- xgboost(data = dtrain_4, #set training data
+                      nrounds = 100, #set number of rounds
+                      verbose = 1, #prints out fit
+                      print_every_n = 20 #prints out result every 20th iteration
+                      )
+```
+
+```{r}
+# Extract importance
+imp_mat <- xgb.importance(model = model_4)
+# Plot importance (top 10 variables)
+xgb.plot.importance(imp_mat, top_n = 20)
+
+```
+
+```{r}
+#Test model
+library(Metrics)
+
+model_4_preds <- predict(model_4, dtest_4)
+
+rmse(test_4$point_differential, model_4_preds)
+```
+
+Even fieldturf probably isn't important enough
