@@ -211,10 +211,11 @@ nfl_rollmeans <- dplyr::tbl(connection, "nfl_data_set") %>% #get the nfl_data_se
    #             off_pass_yards_tot_home, off_rush_yards_tot_home, off_pass_yards_tot_away, off_rush_yards_tot_away) %>% #select columns to consider
   dplyr::collect()
 
-wl = 5 #setting week lap to 5
+wl_list <- c(5,3)
+#wl = 5 #setting week lap to 5
 #add 3 week average as well
 #ratio between 3 week and 5 week averages
-
+for(wl in wl_list){
 met_h <- c("home_score", "off_pass_yards_tot_home", "off_rush_yards_tot_home", 
            "off_passing_yards_qtr_1_home", "off_passing_yards_qtr_2_home", 
            "off_passing_yards_qtr_3_home", "off_passing_yards_qtr_4_home", 
@@ -341,7 +342,7 @@ rm(nfl_data_set_sql)
 
 #delete rollmean_df table
 DBI::dbRemoveTable(connection, "rollmean_df")
-
+}
 DBI::dbDisconnect(connection) #disconnect from database
 
 toc() #stop clock
