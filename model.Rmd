@@ -493,7 +493,12 @@ model_big_data_use <- nfl_data_set %>%
                 off_rushing_yards_qtr_3_away_defense_allowed_5w_avg, off_rushing_yards_qtr_4_away_defense_allowed_5w_avg, 
                 total_drives_home_5w_avg, drive_count_qtr_1_home_5w_avg, drive_count_qtr_2_home_5w_avg, drive_count_qtr_3_home_5w_avg,
                 drive_count_qtr_4_home_5w_avg, total_drives_away_5w_avg, drive_count_qtr_1_away_5w_avg, drive_count_qtr_2_away_5w_avg, 
-                drive_count_qtr_3_away_5w_avg, drive_count_qtr_4_away_5w_avg) %>%
+                drive_count_qtr_3_away_5w_avg, drive_count_qtr_4_away_5w_avg, 
+                total_drives_home_defense_allowed_5w_avg, drive_count_qtr_1_home_defense_allowed_5w_avg,
+                drive_count_qtr_2_home_defense_allowed_5w_avg, drive_count_qtr_3_home_defense_allowed_5w_avg,
+                drive_count_qtr_4_home_defense_allowed_5w_avg, total_drives_away_defense_allowed_5w_avg,
+                drive_count_qtr_1_away_defense_allowed_5w_avg, drive_count_qtr_2_away_defense_allowed_5w_avg,
+                drive_count_qtr_3_away_defense_allowed_5w_avg, drive_count_qtr_4_away_defense_allowed_5w_avg)%>%
   dplyr::collect()
 ```
 
