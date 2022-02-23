@@ -474,7 +474,7 @@ model_big_data_use <- nfl_data_set %>%
                 off_rushing_yards_qtr_2_home_5w_avg, off_rushing_yards_qtr_3_home_5w_avg, off_rushing_yards_qtr_4_home_5w_avg,
                 off_passing_yards_qtr_1_away_5w_avg, off_passing_yards_qtr_2_away_5w_avg, off_passing_yards_qtr_3_away_5w_avg,
                 off_passing_yards_qtr_4_away_5w_avg, off_rushing_yards_qtr_1_away_5w_avg, off_rushing_yards_qtr_2_away_5w_avg,
-                off_rushing_yards_qtr_3_away_5w_avg, off_rushing_yards_qtr_4_away_5w_avg, #rmse 11.008 with only these, rmse 11.178 when including these...likely due to model not being tuned and more vars cause defaults to be less good?
+                off_rushing_yards_qtr_3_away_5w_avg, off_rushing_yards_qtr_4_away_5w_avg,
                 home_yac_5w_avg, total_yac_qtr_1_home_5w_avg, total_yac_qtr_2_home_5w_avg, total_yac_qtr_3_home_5w_avg,
                 total_yac_qtr_4_home_5w_avg, home_total_plays_5w_avg, total_sacks_home_5w_avg, total_ints_home_5w_avg,
                 total_sacks_allow_home_5w_avg, total_ints_throw_home_5w_avg, home_total_time_pos_5w_avg,
@@ -490,7 +490,10 @@ model_big_data_use <- nfl_data_set %>%
                 off_passing_yards_qtr_1_away_defense_allowed_5w_avg, off_passing_yards_qtr_2_away_defense_allowed_5w_avg,
                 off_passing_yards_qtr_3_away_defense_allowed_5w_avg, off_passing_yards_qtr_4_away_defense_allowed_5w_avg,
                 off_rushing_yards_qtr_1_away_defense_allowed_5w_avg, off_rushing_yards_qtr_2_away_defense_allowed_5w_avg,
-                off_rushing_yards_qtr_3_away_defense_allowed_5w_avg, off_rushing_yards_qtr_4_away_defense_allowed_5w_avg) %>%
+                off_rushing_yards_qtr_3_away_defense_allowed_5w_avg, off_rushing_yards_qtr_4_away_defense_allowed_5w_avg, 
+                total_drives_home_5w_avg, drive_count_qtr_1_home_5w_avg, drive_count_qtr_2_home_5w_avg, drive_count_qtr_3_home_5w_avg,
+                drive_count_qtr_4_home_5w_avg, total_drives_away_5w_avg, drive_count_qtr_1_away_5w_avg, drive_count_qtr_2_away_5w_avg, 
+                drive_count_qtr_3_away_5w_avg, drive_count_qtr_4_away_5w_avg) %>%
   dplyr::collect()
 ```
 
@@ -505,7 +508,7 @@ model_big_data_use <- dummy_cols(model_big_data_use, select_columns = c("home_co
 #### Split data into training and testing
 
 ```{r}
-train_big <- filter(model_big_data_use, season %in% seq(1999, 2015))
+train_big <- filter(model_big_data_use, season %in% seq(1999, 2018))
 test_big <- setdiff(model_big_data_use, train_big)
 ```
 
@@ -553,7 +556,7 @@ rmse(test_big$point_differential, big_model_preds)
 
 ```{r}
 par(pty = "s")
-plot(big_model_preds, test_big$point_differential, asp = 1) #flip axes back
+plot(test_big$point_differential, big_model_preds, asp = 1)
 abline(a = 0, b = 1)
 ```
 
