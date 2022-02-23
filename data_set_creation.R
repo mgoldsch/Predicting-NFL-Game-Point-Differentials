@@ -200,6 +200,7 @@ DBI::dbRemoveTable(connection, "game_team_pos_total_avg")
 
 #create rollmeans
 library(zoo) #for rollmean
+library(roll) #for weighted rollmean
 
 teams <- dplyr::tbl(connection, "nfl_data_set") %>% #get list of teams
   dplyr::distinct(home_team) %>% 
@@ -211,6 +212,8 @@ nfl_rollmeans <- dplyr::tbl(connection, "nfl_data_set") %>% #get the nfl_data_se
   dplyr::collect()
 
 wl = 5 #setting week lap to 5
+#add 3 week average as well
+#ratio between 3 week and 5 week averages
 
 met_h <- c("home_score", "off_pass_yards_tot_home", "off_rush_yards_tot_home", 
            "off_passing_yards_qtr_1_home", "off_passing_yards_qtr_2_home", 
@@ -233,21 +236,31 @@ met_a <- c("away_score", "off_pass_yards_tot_away", "off_rush_yards_tot_away",
 met_a <- c(met_a, sapply(c(met_a[2:11], met_a[23:27]), function(x){paste0(x, "_defense_allowed")}, USE.NAMES = FALSE)) #create defense allowed variable names
 
 #rollmean variables that are already averages (need to apply weighted rolling averages)
-avg_metrics <- c("off_pass_yards_drive_avg", "off_rush_yards_drive_avg", "off_pass_yds_drive_avg_qtr_1", 
-                 "off_pass_yds_drive_avg_qtr_2", "off_pass_yds_drive_avg_qtr_3", "off_pass_yds_drive_avg_qtr_4", 
-                 "off_rush_yds_drive_avg_qtr_1", "off_rush_yds_drive_avg_qtr_2", "off_rush_yds_drive_avg_qtr_3", "off_rush_yds_drive_avg_qtr_4")
+avg_metrics <- c("off_pass_yards_drive_avg", "off_rush_yards_drive_avg", "off_pass_yds_drive_avg_qtr_1",
+                 "off_pass_yds_drive_avg_qtr_2", "off_pass_yds_drive_avg_qtr_3", "off_pass_yds_drive_avg_qtr_4",
+                 "off_rush_yds_drive_avg_qtr_1", "off_rush_yds_drive_avg_qtr_2", "off_rush_yds_drive_avg_qtr_3", "off_rush_yds_drive_avg_qtr_4",
+                 "yac_drive_avg_qtr_1", "yac_drive_avg_qtr_2", "yac_drive_avg_qtr_3", "yac_drive_avg_qtr_4",
+                 "avg_sacks_allow_per_drive", "avg_ints_throw_per_drive", "avg_sacks_per_drive", "avg_ints_per_drive")
 
-avg_met_weights <- c()
+avg_met_weights <- c(rep("total_drives", 2), rep(c("drive_count_qtr_1", "drive_count_qtr_2", "drive_count_qtr_3", "drive_count_qtr_4"), 3), rep("total_drives", 2))
 
-avg_metrics_h <- sapply(avg_metrics, function(x){paste0(x, "_home")}, USE.NAMES = FALSE)
+avg_metrics_h <- c(sapply(avg_metrics, function(x){paste0(x, "_home")}, USE.NAMES = FALSE), "home_yac_drive_avg", "home_plays_per_drive", "home_avg_drive_time_pos")
 avg_metrics_h<- c(avg_metrics_h, sapply(avg_metrics_h[1:10], function(x){paste0(x, "_defense_allowed")})) #create defense allowed variable names
 
-avg_met_weights_h <- sapply(avg_met_weights, function(x){paste0(x, "_home")}, USE.NAMES = FALSE)
+avg_met_weights_h <- c(sapply(avg_met_weights, function(x){paste0(x, "_home")}, USE.NAMES = FALSE), 
+                       rep("total_drives_home_defense_allowed", 2), rep("total_drives_home", 3),
+                       rep("total_drives_home_defense_allowed", 2), 
+                       rep(c("drive_count_qtr_1_home_defense_allowed", "drive_count_qtr_2_home_defense_allowed", 
+                         "drive_count_qtr_3_home_defense_allowed", "drive_count_qtr_4_home_defense_allowed"), 2))
 
-avg_metrics_a <- sapply(avg_metrics, function(x){paste0(x, "_away")}, USE.NAMES = FALSE)
+avg_metrics_a <- c(sapply(avg_metrics, function(x){paste0(x, "_away")}, USE.NAMES = FALSE), "away_yac_drive_avg", "away_plays_per_drive", "away_avg_drive_time_pos")
 avg_metrics_a<- c(avg_metrics_a, sapply(avg_metrics_a[1:10], function(x){paste0(x, "_defense_allowed")})) #create defense allowed variable names
 
-avg_met_weights_a <- sapply(avg_met_weights, function(x){paste0(x, "_away")}, USE.NAMES = FALSE)
+avg_met_weights_a <- c(sapply(avg_met_weights, function(x){paste0(x, "_away")}, USE.NAMES = FALSE),
+                       rep("total_drives_away_defense_allowed", 2), rep("total_drives_away", 3), 
+                       rep("total_drives_away_defense_allowed", 2), 
+                       rep(c("drive_count_qtr_1_away_defense_allowed", "drive_count_qtr_2_away_defense_allowed", 
+                         "drive_count_qtr_3_away_defense_allowed", "drive_count_qtr_4_away_defense_allowed"), 2))
 
 rm_names_met_h <- sapply(met_h, function(x){paste0(x, "_", wl, "w_avg")}, USE.NAMES = FALSE) #vector of names the new variables will be (home variables)
 rm_names_met_a <- sapply(met_a, function(x){paste0(x, "_", wl, "w_avg")}, USE.NAMES = FALSE) #vector of names the new variables will be (away variables)
@@ -257,7 +270,7 @@ rm_names_point_diff <- c(paste0("home_point_differential_", wl, "w_avg"), paste0
 rm_names_avg_met_h <- sapply(avg_metrics_h, function(x){paste0(x, "_", wl, "w_avg")}, USE.NAMES = FALSE) #vector of names the avg new variables will be (home variables)
 rm_names_avg_met_a <- sapply(avg_metrics_a, function(x){paste0(x, "_", wl, "w_avg")}, USE.NAMES = FALSE) #vector of names the avg new variables will be (away variables)
 
-home_rollmean_df_list <- list() #used to store dfs from loop where the team is the away team
+home_rollmean_df_list <- list() #used to store dfs from loop where the team is the home team
 away_rollmean_df_list <- list() #used to store dfs from loop where the team is the away team
 
 i <- 0 #loop counter
@@ -270,9 +283,9 @@ for(t in teams){ #loop through each team
   rollmean_temp <- rollmean_temp[rollmean_temp$home_team == t | rollmean_temp$away_team == t, ] #get only games of 1 team
   
   for (j in 1:length(met_h)){ #loop through each metric we are applying rollmean to
-    rm_values <- zoo::rollmean(ifelse(rollmean_temp$home_team == t, rollmean_temp[, met_h[j]], rollmean_temp[,met_a[j]]), k = wl, fill = NA, align = "right") #calculate rollmean of score for team
+    rm_values <- zoo::rollmean(ifelse(rollmean_temp$home_team == t, rollmean_temp[, met_h[j]], rollmean_temp[,met_a[j]]), k = wl, fill = NA, align = "right") #calculate rollmean of metric for team
     rollmean_temp[, rm_names_met_h[j]] <- ifelse(rollmean_temp$home_team == t, rm_values, NA) #populate the rollmean value into home column if the team is home
-    rollmean_temp[, rm_names_met_a[j]] <- ifelse(rollmean_temp$away_team == t, rm_values, NA) #populate the rollmean value into home column if the team is home
+    rollmean_temp[, rm_names_met_a[j]] <- ifelse(rollmean_temp$away_team == t, rm_values, NA) #populate the rollmean value into away column if the team is away
   }
   
   #rollmean point_differential
@@ -280,8 +293,18 @@ for(t in teams){ #loop through each team
   rollmean_temp[, rm_names_point_diff[1]] <- ifelse(rollmean_temp$home_team == t, point_diff_avg, NA) #populate the rollmean point_diff_avg into home column if the team is home
   rollmean_temp[, rm_names_point_diff[2]] <- ifelse(rollmean_temp$away_team == t, point_diff_avg, NA) #populate the rollmean point_diff_avg into away column if the team is away
   
-  home_rollmean_temp_df <- rollmean_temp[rollmean_temp$home_team == t, which(names(rollmean_temp) %in% c("game_id", rm_names_met_h, rm_names_point_diff[1]))] #create df of only games where the team was the home team and include only game_id and rollmean home columns
-  away_rollmean_temp_df <- rollmean_temp[rollmean_temp$away_team == t, which(names(rollmean_temp) %in% c("game_id", rm_names_met_a, rm_names_point_diff[2]))] #create df of only games where the team was the away team and include only game_id and rollmean away columns
+  for (k in 1:length(avg_metrics_h)){ #loop through each avg metric we are applying rollmean to
+    rm_values_avg <- roll::roll_mean(ifelse(rollmean_temp$home_team == t, rollmean_temp[, avg_metrics_h[k]], rollmean_temp[, avg_metrics_a[k]]), 
+                                    width = wl,
+                                    weights = ifelse(rollmean_temp$home_team == t, rollmean_temp[, avg_met_weights_h[k]], rollmean_temp[, avg_met_weights_a[k]]), 
+                                    online = FALSE) #calculate rollmean of metric for teams
+    rollmean_temp[, rm_names_avg_met_h[k]] <- ifelse(rollmean_temp$home_team == t, rm_values_avg, NA) #populate the rollmean value into home column if the team is home
+    rollmean_temp[, rm_names_avg_met_a[k]] <- ifelse(rollmean_temp$away_team == t, rm_values_avg, NA) #populate the rollmean value into away column if the team is away
+  }
+  
+  #separate into home and away
+  home_rollmean_temp_df <- rollmean_temp[rollmean_temp$home_team == t, which(names(rollmean_temp) %in% c("game_id", rm_names_met_h, rm_names_point_diff[1], rm_names_avg_met_h))] #create df of only games where the team was the home team and include only game_id and rollmean home columns
+  away_rollmean_temp_df <- rollmean_temp[rollmean_temp$away_team == t, which(names(rollmean_temp) %in% c("game_id", rm_names_met_a, rm_names_point_diff[2], rm_names_avg_met_a))] #create df of only games where the team was the away team and include only game_id and rollmean away columns
   
   home_rollmean_df_list[[i]] <- home_rollmean_temp_df #add df to list
   away_rollmean_df_list[[i]] <- away_rollmean_temp_df #add df to list
