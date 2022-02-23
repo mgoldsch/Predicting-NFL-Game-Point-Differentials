@@ -464,7 +464,7 @@ Actually, after talking to Martin I can just throw in all the variaables and XGB
 
 ```{r}
 model_big_data_use <- nfl_data_set %>% 
-  dplyr::filter(season_type == "REG") %>% 
+  dplyr::filter(season_type == "REG") %>%  #consider dropping weeks 1-4, 16,17
   dplyr::select(point_differential, season, week, home_coach, away_coach, roof, surface, start_time,
                 home_score_5w_avg, off_pass_yards_tot_home_5w_avg, off_rush_yards_tot_home_5w_avg, 
                 away_score_5w_avg, off_pass_yards_tot_away_5w_avg, off_rush_yards_tot_away_5w_avg, 
@@ -498,7 +498,31 @@ model_big_data_use <- nfl_data_set %>%
                 drive_count_qtr_2_home_defense_allowed_5w_avg, drive_count_qtr_3_home_defense_allowed_5w_avg,
                 drive_count_qtr_4_home_defense_allowed_5w_avg, total_drives_away_defense_allowed_5w_avg,
                 drive_count_qtr_1_away_defense_allowed_5w_avg, drive_count_qtr_2_away_defense_allowed_5w_avg,
-                drive_count_qtr_3_away_defense_allowed_5w_avg, drive_count_qtr_4_away_defense_allowed_5w_avg)%>%
+                drive_count_qtr_3_away_defense_allowed_5w_avg, drive_count_qtr_4_away_defense_allowed_5w_avg, 
+                off_pass_yards_drive_avg_home_5w_avg, off_rush_yards_drive_avg_home_5w_avg, off_pass_yds_drive_avg_qtr_1_home_5w_avg,
+                off_pass_yds_drive_avg_qtr_2_home_5w_avg, off_pass_yds_drive_avg_qtr_3_home_5w_avg, off_pass_yds_drive_avg_qtr_4_home_5w_avg,
+                off_rush_yds_drive_avg_qtr_1_home_5w_avg, off_rush_yds_drive_avg_qtr_2_home_5w_avg, off_rush_yds_drive_avg_qtr_3_home_5w_avg,
+                off_rush_yds_drive_avg_qtr_4_home_5w_avg, yac_drive_avg_qtr_1_home_5w_avg, yac_drive_avg_qtr_2_home_5w_avg,
+                yac_drive_avg_qtr_3_home_5w_avg, yac_drive_avg_qtr_4_home_5w_avg, avg_sacks_allow_per_drive_home_5w_avg,
+                avg_ints_throw_per_drive_home_5w_avg, avg_sacks_per_drive_home_5w_avg, avg_ints_per_drive_home_5w_avg, home_yac_drive_avg_5w_avg,
+                home_plays_per_drive_5w_avg, home_avg_drive_time_pos_5w_avg, off_pass_yards_drive_avg_home_defense_allowed_5w_avg,
+                off_rush_yards_drive_avg_home_defense_allowed_5w_avg, off_pass_yds_drive_avg_qtr_1_home_defense_allowed_5w_avg,
+                off_pass_yds_drive_avg_qtr_2_home_defense_allowed_5w_avg, off_pass_yds_drive_avg_qtr_3_home_defense_allowed_5w_avg,
+                off_pass_yds_drive_avg_qtr_4_home_defense_allowed_5w_avg, off_rush_yds_drive_avg_qtr_1_home_defense_allowed_5w_avg,
+                off_rush_yds_drive_avg_qtr_2_home_defense_allowed_5w_avg, off_rush_yds_drive_avg_qtr_3_home_defense_allowed_5w_avg,
+                off_rush_yds_drive_avg_qtr_4_home_defense_allowed_5w_avg, 
+                off_pass_yards_drive_avg_away_5w_avg, off_rush_yards_drive_avg_away_5w_avg, off_pass_yds_drive_avg_qtr_1_away_5w_avg,
+                off_pass_yds_drive_avg_qtr_2_away_5w_avg, off_pass_yds_drive_avg_qtr_3_away_5w_avg, off_pass_yds_drive_avg_qtr_4_away_5w_avg,
+                off_rush_yds_drive_avg_qtr_1_away_5w_avg, off_rush_yds_drive_avg_qtr_2_away_5w_avg, off_rush_yds_drive_avg_qtr_3_away_5w_avg,
+                off_rush_yds_drive_avg_qtr_4_away_5w_avg, yac_drive_avg_qtr_1_away_5w_avg, yac_drive_avg_qtr_2_away_5w_avg,
+                yac_drive_avg_qtr_3_away_5w_avg, yac_drive_avg_qtr_4_away_5w_avg, avg_sacks_allow_per_drive_away_5w_avg,
+                avg_ints_throw_per_drive_away_5w_avg, avg_sacks_per_drive_away_5w_avg, avg_ints_per_drive_away_5w_avg, away_yac_drive_avg_5w_avg,
+                away_plays_per_drive_5w_avg, away_avg_drive_time_pos_5w_avg, off_pass_yards_drive_avg_away_defense_allowed_5w_avg,
+                off_rush_yards_drive_avg_away_defense_allowed_5w_avg, off_pass_yds_drive_avg_qtr_1_away_defense_allowed_5w_avg,
+                off_pass_yds_drive_avg_qtr_2_away_defense_allowed_5w_avg, off_pass_yds_drive_avg_qtr_3_away_defense_allowed_5w_avg,
+                off_pass_yds_drive_avg_qtr_4_away_defense_allowed_5w_avg, off_rush_yds_drive_avg_qtr_1_away_defense_allowed_5w_avg,
+                off_rush_yds_drive_avg_qtr_2_away_defense_allowed_5w_avg, off_rush_yds_drive_avg_qtr_3_away_defense_allowed_5w_avg,
+                off_rush_yds_drive_avg_qtr_4_away_defense_allowed_5w_avg)%>%
   dplyr::collect()
 ```
 
@@ -514,7 +538,7 @@ model_big_data_use <- dummy_cols(model_big_data_use, select_columns = c("home_co
 
 ```{r}
 train_big <- filter(model_big_data_use, season %in% seq(1999, 2018))
-test_big <- setdiff(model_big_data_use, train_big)
+test_big <- filter(setdiff(model_big_data_use, train_big), season %in% c(2019, 2021))
 ```
 
 ### Convert data to DMatrix
