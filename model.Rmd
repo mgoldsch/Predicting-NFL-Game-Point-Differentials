@@ -950,7 +950,7 @@ toc()
 # Extract importance
 imp_mat <- xgb.importance(model = model_tuned)
 # Plot importance (top 10 variables)
-xgb.plot.importance(imp_mat, top_n = 40)
+xgb.plot.importance(imp_mat, left_margin = 15, top_n = 20)
 ```
 
 
