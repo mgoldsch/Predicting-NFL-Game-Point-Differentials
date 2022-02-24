@@ -212,57 +212,69 @@ nfl_rollmeans <- dplyr::tbl(connection, "nfl_data_set") %>% #get the nfl_data_se
    #             off_pass_yards_tot_home, off_rush_yards_tot_home, off_pass_yards_tot_away, off_rush_yards_tot_away) %>% #select columns to consider
   dplyr::collect()
 
+#variables that are going to have rollmean applied
+met_h <- c("home_score", "off_pass_yards_tot_home", "off_rush_yards_tot_home", 
+           "off_passing_yards_qtr_1_home", "off_passing_yards_qtr_2_home", 
+           "off_passing_yards_qtr_3_home", "off_passing_yards_qtr_4_home", 
+           "off_rushing_yards_qtr_1_home", "off_rushing_yards_qtr_2_home", 
+           "off_rushing_yards_qtr_3_home", "off_rushing_yards_qtr_4_home", 
+           "home_yac", "total_yac_qtr_1_home", "total_yac_qtr_2_home", "total_yac_qtr_3_home", "total_yac_qtr_4_home", 
+           "home_total_plays", "total_sacks_home", "total_ints_home", "total_sacks_allow_home", "total_ints_throw_home", "home_total_time_pos", 
+           "total_drives_home", "drive_count_qtr_1_home", "drive_count_qtr_2_home", "drive_count_qtr_3_home", "drive_count_qtr_4_home") #vector of variables to apply rollmeans to (home varaibles)
+met_h <- c(met_h, sapply(c(met_h[2:11], met_h[23:27]), function(x){paste0(x, "_defense_allowed")}, USE.NAMES = FALSE)) #create defense allowed variable names
+
+met_a <- c("away_score", "off_pass_yards_tot_away", "off_rush_yards_tot_away", 
+           "off_passing_yards_qtr_1_away", "off_passing_yards_qtr_2_away", 
+           "off_passing_yards_qtr_3_away", "off_passing_yards_qtr_4_away", 
+           "off_rushing_yards_qtr_1_away", "off_rushing_yards_qtr_2_away", 
+           "off_rushing_yards_qtr_3_away", "off_rushing_yards_qtr_4_away", 
+           "away_yac", "total_yac_qtr_1_away", "total_yac_qtr_2_away", "total_yac_qtr_3_away", "total_yac_qtr_4_away", 
+           "away_total_plays", "total_sacks_away", "total_ints_away", "total_sacks_allow_away", "total_ints_throw_away", "away_total_time_pos", 
+           "total_drives_away", "drive_count_qtr_1_away", "drive_count_qtr_2_away", "drive_count_qtr_3_away", "drive_count_qtr_4_away") #vector of variables to apply rollmeans to (away varaibles)
+met_a <- c(met_a, sapply(c(met_a[2:11], met_a[23:27]), function(x){paste0(x, "_defense_allowed")}, USE.NAMES = FALSE)) #create defense allowed variable names
+
+#rollmean variables that are already averages (need to apply weighted rolling averages)
+avg_metrics <- c("off_pass_yards_drive_avg", "off_rush_yards_drive_avg", "off_pass_yds_drive_avg_qtr_1",
+                 "off_pass_yds_drive_avg_qtr_2", "off_pass_yds_drive_avg_qtr_3", "off_pass_yds_drive_avg_qtr_4",
+                 "off_rush_yds_drive_avg_qtr_1", "off_rush_yds_drive_avg_qtr_2", "off_rush_yds_drive_avg_qtr_3", "off_rush_yds_drive_avg_qtr_4",
+                 "yac_drive_avg_qtr_1", "yac_drive_avg_qtr_2", "yac_drive_avg_qtr_3", "yac_drive_avg_qtr_4",
+                 "avg_sacks_allow_per_drive", "avg_ints_throw_per_drive", "avg_sacks_per_drive", "avg_ints_per_drive")
+
+avg_met_weights <- c(rep("total_drives", 2), rep(c("drive_count_qtr_1", "drive_count_qtr_2", "drive_count_qtr_3", "drive_count_qtr_4"), 3), rep("total_drives", 2))
+
+avg_metrics_h <- c(sapply(avg_metrics, function(x){paste0(x, "_home")}, USE.NAMES = FALSE), "home_yac_drive_avg", "home_plays_per_drive", "home_avg_drive_time_pos")
+avg_metrics_h<- c(avg_metrics_h, sapply(avg_metrics_h[1:10], function(x){paste0(x, "_defense_allowed")})) #create defense allowed variable names
+
+avg_met_weights_h <- c(sapply(avg_met_weights, function(x){paste0(x, "_home")}, USE.NAMES = FALSE), 
+                       rep("total_drives_home_defense_allowed", 2), rep("total_drives_home", 3),
+                       rep("total_drives_home_defense_allowed", 2), 
+                       rep(c("drive_count_qtr_1_home_defense_allowed", "drive_count_qtr_2_home_defense_allowed", 
+                             "drive_count_qtr_3_home_defense_allowed", "drive_count_qtr_4_home_defense_allowed"), 2))
+
+avg_metrics_a <- c(sapply(avg_metrics, function(x){paste0(x, "_away")}, USE.NAMES = FALSE), "away_yac_drive_avg", "away_plays_per_drive", "away_avg_drive_time_pos")
+avg_metrics_a<- c(avg_metrics_a, sapply(avg_metrics_a[1:10], function(x){paste0(x, "_defense_allowed")})) #create defense allowed variable names
+
+avg_met_weights_a <- c(sapply(avg_met_weights, function(x){paste0(x, "_away")}, USE.NAMES = FALSE),
+                       rep("total_drives_away_defense_allowed", 2), rep("total_drives_away", 3), 
+                       rep("total_drives_away_defense_allowed", 2), 
+                       rep(c("drive_count_qtr_1_away_defense_allowed", "drive_count_qtr_2_away_defense_allowed", 
+                             "drive_count_qtr_3_away_defense_allowed", "drive_count_qtr_4_away_defense_allowed"), 2))
+
+rm_names_met_h_list <- list()
+rm_names_met_a_list <- list()
+
+rm_names_avg_met_h_list <- list()
+rm_names_avg_met_a_list <- list()
+
 wl_list <- c(5,3)
 #wl = 5 #setting week lap to 5
 #add 3 week average as well
 #ratio between 3 week and 5 week averages
+
+q <- 1 #week loop counter
+
 for(wl in wl_list){
-  met_h <- c("home_score", "off_pass_yards_tot_home", "off_rush_yards_tot_home", 
-             "off_passing_yards_qtr_1_home", "off_passing_yards_qtr_2_home", 
-             "off_passing_yards_qtr_3_home", "off_passing_yards_qtr_4_home", 
-             "off_rushing_yards_qtr_1_home", "off_rushing_yards_qtr_2_home", 
-             "off_rushing_yards_qtr_3_home", "off_rushing_yards_qtr_4_home", 
-             "home_yac", "total_yac_qtr_1_home", "total_yac_qtr_2_home", "total_yac_qtr_3_home", "total_yac_qtr_4_home", 
-             "home_total_plays", "total_sacks_home", "total_ints_home", "total_sacks_allow_home", "total_ints_throw_home", "home_total_time_pos", 
-             "total_drives_home", "drive_count_qtr_1_home", "drive_count_qtr_2_home", "drive_count_qtr_3_home", "drive_count_qtr_4_home") #vector of variables to apply rollmeans to (home varaibles)
-  met_h <- c(met_h, sapply(c(met_h[2:11], met_h[23:27]), function(x){paste0(x, "_defense_allowed")}, USE.NAMES = FALSE)) #create defense allowed variable names
-  
-  met_a <- c("away_score", "off_pass_yards_tot_away", "off_rush_yards_tot_away", 
-             "off_passing_yards_qtr_1_away", "off_passing_yards_qtr_2_away", 
-             "off_passing_yards_qtr_3_away", "off_passing_yards_qtr_4_away", 
-             "off_rushing_yards_qtr_1_away", "off_rushing_yards_qtr_2_away", 
-             "off_rushing_yards_qtr_3_away", "off_rushing_yards_qtr_4_away", 
-             "away_yac", "total_yac_qtr_1_away", "total_yac_qtr_2_away", "total_yac_qtr_3_away", "total_yac_qtr_4_away", 
-             "away_total_plays", "total_sacks_away", "total_ints_away", "total_sacks_allow_away", "total_ints_throw_away", "away_total_time_pos", 
-             "total_drives_away", "drive_count_qtr_1_away", "drive_count_qtr_2_away", "drive_count_qtr_3_away", "drive_count_qtr_4_away") #vector of variables to apply rollmeans to (away varaibles)
-  met_a <- c(met_a, sapply(c(met_a[2:11], met_a[23:27]), function(x){paste0(x, "_defense_allowed")}, USE.NAMES = FALSE)) #create defense allowed variable names
-  
-  #rollmean variables that are already averages (need to apply weighted rolling averages)
-  avg_metrics <- c("off_pass_yards_drive_avg", "off_rush_yards_drive_avg", "off_pass_yds_drive_avg_qtr_1",
-                   "off_pass_yds_drive_avg_qtr_2", "off_pass_yds_drive_avg_qtr_3", "off_pass_yds_drive_avg_qtr_4",
-                   "off_rush_yds_drive_avg_qtr_1", "off_rush_yds_drive_avg_qtr_2", "off_rush_yds_drive_avg_qtr_3", "off_rush_yds_drive_avg_qtr_4",
-                   "yac_drive_avg_qtr_1", "yac_drive_avg_qtr_2", "yac_drive_avg_qtr_3", "yac_drive_avg_qtr_4",
-                   "avg_sacks_allow_per_drive", "avg_ints_throw_per_drive", "avg_sacks_per_drive", "avg_ints_per_drive")
-  
-  avg_met_weights <- c(rep("total_drives", 2), rep(c("drive_count_qtr_1", "drive_count_qtr_2", "drive_count_qtr_3", "drive_count_qtr_4"), 3), rep("total_drives", 2))
-  
-  avg_metrics_h <- c(sapply(avg_metrics, function(x){paste0(x, "_home")}, USE.NAMES = FALSE), "home_yac_drive_avg", "home_plays_per_drive", "home_avg_drive_time_pos")
-  avg_metrics_h<- c(avg_metrics_h, sapply(avg_metrics_h[1:10], function(x){paste0(x, "_defense_allowed")})) #create defense allowed variable names
-  
-  avg_met_weights_h <- c(sapply(avg_met_weights, function(x){paste0(x, "_home")}, USE.NAMES = FALSE), 
-                         rep("total_drives_home_defense_allowed", 2), rep("total_drives_home", 3),
-                         rep("total_drives_home_defense_allowed", 2), 
-                         rep(c("drive_count_qtr_1_home_defense_allowed", "drive_count_qtr_2_home_defense_allowed", 
-                               "drive_count_qtr_3_home_defense_allowed", "drive_count_qtr_4_home_defense_allowed"), 2))
-  
-  avg_metrics_a <- c(sapply(avg_metrics, function(x){paste0(x, "_away")}, USE.NAMES = FALSE), "away_yac_drive_avg", "away_plays_per_drive", "away_avg_drive_time_pos")
-  avg_metrics_a<- c(avg_metrics_a, sapply(avg_metrics_a[1:10], function(x){paste0(x, "_defense_allowed")})) #create defense allowed variable names
-  
-  avg_met_weights_a <- c(sapply(avg_met_weights, function(x){paste0(x, "_away")}, USE.NAMES = FALSE),
-                         rep("total_drives_away_defense_allowed", 2), rep("total_drives_away", 3), 
-                         rep("total_drives_away_defense_allowed", 2), 
-                         rep(c("drive_count_qtr_1_away_defense_allowed", "drive_count_qtr_2_away_defense_allowed", 
-                               "drive_count_qtr_3_away_defense_allowed", "drive_count_qtr_4_away_defense_allowed"), 2))
+  q <- q + 1 #week loop +1
   
   rm_names_met_h <- sapply(met_h, function(x){paste0(x, "_", wl, "w_avg")}, USE.NAMES = FALSE) #vector of names the new variables will be (home variables)
   rm_names_met_a <- sapply(met_a, function(x){paste0(x, "_", wl, "w_avg")}, USE.NAMES = FALSE) #vector of names the new variables will be (away variables)
@@ -272,10 +284,17 @@ for(wl in wl_list){
   rm_names_avg_met_h <- sapply(avg_metrics_h, function(x){paste0(x, "_", wl, "w_avg")}, USE.NAMES = FALSE) #vector of names the avg new variables will be (home variables)
   rm_names_avg_met_a <- sapply(avg_metrics_a, function(x){paste0(x, "_", wl, "w_avg")}, USE.NAMES = FALSE) #vector of names the avg new variables will be (away variables)
   
+  #add variable names to lists
+  rm_names_met_h_list[[q]] <- rm_names_met_h
+  rm_names_met_a_list[[q]] <- rm_names_met_a
+  
+  rm_names_avg_met_h_list[[q]] <- rm_names_avg_met_h
+  rm_names_avg_met_a_list[[q]] <- rm_names_avg_met_a
+  
   home_rollmean_df_list <- list() #used to store dfs from loop where the team is the home team
   away_rollmean_df_list <- list() #used to store dfs from loop where the team is the away team
   
-  i <- 0 #loop counter
+  i <- 1 #team loop counter
   
   #calculate rollmean variables for each team
   for(t in teams){ #loop through each team
@@ -344,6 +363,10 @@ for(wl in wl_list){
   #delete rollmean_df table
   DBI::dbRemoveTable(connection, "rollmean_df")
 }
+
+# #create rollmean variable ratio variables
+# rollmean_ratio_df <- as.data.frame(nfl_rollmeans)
+# rollman_ratio_var_names <- paste0(rm_names_met_h_list[2])
 
 DBI::dbDisconnect(connection) #disconnect from database
 
