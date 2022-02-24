@@ -21,7 +21,6 @@ library(tictoc) #timing code execution
 
 library(xgboost) # Load XGBoost
 library(caret) # Load Caret
-library(OptimalCutpoints) # Load optimal cutpoints
 library(ggplot2) # Load ggplot2
 library(xgboostExplainer) # Load XGboost Explainer
 library(pROC) # Load proc
