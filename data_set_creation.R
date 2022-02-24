@@ -271,7 +271,7 @@ wl_list <- c(5,3)
 #add 3 week average as well
 #ratio between 3 week and 5 week averages
 
-q <- 1 #week loop counter
+q <- 0 #week loop counter
 
 for(wl in wl_list){
   q <- q + 1 #week loop +1
@@ -294,7 +294,7 @@ for(wl in wl_list){
   home_rollmean_df_list <- list() #used to store dfs from loop where the team is the home team
   away_rollmean_df_list <- list() #used to store dfs from loop where the team is the away team
   
-  i <- 1 #team loop counter
+  i <- 0 #team loop counter
   
   #calculate rollmean variables for each team
   for(t in teams){ #loop through each team
@@ -364,9 +364,9 @@ for(wl in wl_list){
   DBI::dbRemoveTable(connection, "rollmean_df")
 }
 
-# #create rollmean variable ratio variables
-# rollmean_ratio_df <- as.data.frame(nfl_rollmeans)
-# rollman_ratio_var_names <- paste0(rm_names_met_h_list[2])
+#create rollmean variable ratio variables
+rollmean_ratio_df <- as.data.frame(nfl_rollmeans)
+rollman_ratio_var_names <- mapply(function(x, y){paste0(x, "_RATIO_", y)}, rm_names_met_h_list[2], rm_names_met_h_list[1])
 
 DBI::dbDisconnect(connection) #disconnect from database
 
