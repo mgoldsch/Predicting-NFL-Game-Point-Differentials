@@ -126,9 +126,9 @@ game_teams_and_info <- pbp_db %>%
                    start_time = start_time, roof = roof, surface = surface, weather = weather, game_stadium = game_stadium,
                    home_coach = home_coach, away_coach = away_coach,
                    home_team = home_team, away_team = away_team,
-                   home_score = home_score, away_score = away_score, result = result) %>%
+                   home_score = home_score, away_score = away_score, result = result, spread_line = spread_line) %>%
   dplyr::select(game_id, season, week, season_type, game_date, start_time, roof, surface, weather, game_stadium, 
-                home_team, away_team, home_score, away_score, result, home_coach, away_coach) %>%
+                home_team, away_team, home_score, away_score, result, home_coach, away_coach, spread_line) %>%
   dplyr::rename(point_differential = result) %>%
   dplyr::compute()
 
