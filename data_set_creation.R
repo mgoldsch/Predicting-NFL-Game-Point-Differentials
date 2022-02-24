@@ -369,22 +369,22 @@ rollmean_ratio_df <- as.data.frame(dplyr::tbl(connection, "nfl_data_set") %>% dp
 
 rollmean_ratio_var_names_met_h <- mapply(function(x, y){paste0(x, "_RATIO_", y)}, rm_names_met_h_list[2], rm_names_met_h_list[1])
 for(i in 1:length(rollmean_ratio_var_names_met_h)){
-  rollmean_ratio_df[, rollmean_ratio_var_names_met_h[i]] <- rollmean_ratio_df[, rm_names_met_h_list[[2]][i]]/rollmean_ratio_df[, rm_names_met_h_list[[1]][i]]
+  rollmean_ratio_df[, rollmean_ratio_var_names_met_h[i]] <- ifelse(rollmean_ratio_df[, rm_names_met_h_list[[1]][i]] == 0, NA, rollmean_ratio_df[, rm_names_met_h_list[[2]][i]]/rollmean_ratio_df[, rm_names_met_h_list[[1]][i]])
 }
 
 rollmean_ratio_var_names_met_a <- mapply(function(x, y){paste0(x, "_RATIO_", y)}, rm_names_met_a_list[2], rm_names_met_a_list[1])
 for(i in 1:length(rollmean_ratio_var_names_met_a)){
-  rollmean_ratio_df[, rollmean_ratio_var_names_met_a[i]] <- rollmean_ratio_df[, rm_names_met_a_list[[2]][i]]/rollmean_ratio_df[, rm_names_met_a_list[[1]][i]]
+  rollmean_ratio_df[, rollmean_ratio_var_names_met_a[i]] <- ifelse(rollmean_ratio_df[, rm_names_met_a_list[[1]][i]] == 0, NA, rollmean_ratio_df[, rm_names_met_a_list[[2]][i]]/rollmean_ratio_df[, rm_names_met_a_list[[1]][i]])
 }
 
 rollmean_ratio_var_names_met_avg_h <- mapply(function(x, y){paste0(x, "_RATIO_", y)}, rm_names_avg_met_h_list[2], rm_names_avg_met_h_list[1])
 for(i in 1:length(rollmean_ratio_var_names_met_avg_h)){
-  rollmean_ratio_df[, rollmean_ratio_var_names_met_avg_h[i]] <- rollmean_ratio_df[, rm_names_avg_met_h_list[[2]][i]]/rollmean_ratio_df[, rm_names_avg_met_h_list[[1]][i]]
+  rollmean_ratio_df[, rollmean_ratio_var_names_met_avg_h[i]] <- ifelse(rollmean_ratio_df[, rm_names_avg_met_h_list[[1]][i]] == 0, NA, rollmean_ratio_df[, rm_names_avg_met_h_list[[2]][i]]/rollmean_ratio_df[, rm_names_avg_met_h_list[[1]][i]])
 }
 
 rollmean_ratio_var_names_met_avg_a <- mapply(function(x, y){paste0(x, "_RATIO_", y)}, rm_names_avg_met_a_list[2], rm_names_avg_met_a_list[1])
 for(i in 1:length(rollmean_ratio_var_names_met_avg_a)){
-  rollmean_ratio_df[, rollmean_ratio_var_names_met_avg_a[i]] <- rollmean_ratio_df[, rm_names_avg_met_a_list[[2]][i]]/rollmean_ratio_df[, rm_names_avg_met_a_list[[1]][i]]
+  rollmean_ratio_df[, rollmean_ratio_var_names_met_avg_a[i]] <- ifelse(rollmean_ratio_df[, rm_names_avg_met_a_list[[1]][i]] == 0, NA, rollmean_ratio_df[, rm_names_avg_met_a_list[[2]][i]]/rollmean_ratio_df[, rm_names_avg_met_a_list[[1]][i]])
 }
 
 rollmean_ratio_df <- rollmean_ratio_df[, which(names(rollmean_ratio_df) %in% c("game_id", rollmean_ratio_var_names_met_h, rollmean_ratio_var_names_met_a, rollmean_ratio_var_names_met_avg_h, rollmean_ratio_var_names_met_avg_a))]
