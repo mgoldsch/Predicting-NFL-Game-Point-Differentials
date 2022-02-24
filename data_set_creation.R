@@ -201,7 +201,7 @@ DBI::dbRemoveTable(connection, "game_team_pos_total_avg")
 #create rollmeans
 library(zoo) #for rollmean
 library(roll) #for weighted rollmean
-library(stats) #for lagged rollmean
+library(Hmisc) #for lagged roll_mean
 
 teams <- dplyr::tbl(connection, "nfl_data_set") %>% #get list of teams
   dplyr::distinct(home_team) %>% 
@@ -315,10 +315,10 @@ for(wl in wl_list){
     rollmean_temp[, rm_names_point_diff[2]] <- ifelse(rollmean_temp$away_team == t, point_diff_avg, NA) #populate the rollmean point_diff_avg into away column if the team is away
     
     for (k in 1:length(avg_metrics_h)){ #loop through each avg metric we are applying rollmean to
-      rm_values_avg <- stats::lag(roll::roll_mean(ifelse(rollmean_temp$home_team == t, rollmean_temp[, avg_metrics_h[k]], rollmean_temp[, avg_metrics_a[k]]), 
+      rm_values_avg <- Hmisc::Lag(roll::roll_mean(ifelse(rollmean_temp$home_team == t, rollmean_temp[, avg_metrics_h[k]], rollmean_temp[, avg_metrics_a[k]]), 
                                                   width = wl,
                                                   weights = ifelse(rollmean_temp$home_team == t, rollmean_temp[, avg_met_weights_h[k]], rollmean_temp[, avg_met_weights_a[k]]), 
-                                                  online = FALSE), -1) #calculate rollmean of metric for teams
+                                                  online = FALSE), 1) #calculate rollmean of metric for teams
       rollmean_temp[, rm_names_avg_met_h[k]] <- ifelse(rollmean_temp$home_team == t, rm_values_avg, NA) #populate the rollmean value into home column if the team is home
       rollmean_temp[, rm_names_avg_met_a[k]] <- ifelse(rollmean_temp$away_team == t, rm_values_avg, NA) #populate the rollmean value into away column if the team is away
     }
