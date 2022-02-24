@@ -914,7 +914,7 @@ scatterplot3d(des$eta, des$gamma, des$min_child_weight,
 ```{r}
 #dm <- fre_dm
 tic()
-runs <- do_bayes(n_design = 30, of = obj.fun, opt_steps = 10, seed = 123456)
+runs <- do_bayes(n_design = 30, of = obj.fun, opt_steps = 10, seed = 123456) #will need to change n_design when more hyparameters are added
 toc()
 ```
 
@@ -962,7 +962,7 @@ model_tuned_preds <- predict(model_tuned, dtest_big)
 rmse(test_big$point_differential, model_tuned_preds)
 ```
 
-
+10.62897
 
 ```{r}
 #Plot Actual vs Predicted
@@ -971,7 +971,51 @@ plot(test_big$point_differential, model_tuned_preds, asp = 1)
 abline(a = 0, b = 1)
 ```
 
+# Betting results
+
+```{r}
+betting_results <- nfl_data_set %>%
+  dplyr::filter(season %in% c(2019, 2021) & season_type == "REG") %>% 
+  dplyr::select(game_id, season, week, point_differential, spread_line) %>% 
+  #dplyr::mutate(pred_point_differential = model_tuned_preds) %>% 
+  dplyr::collect()
+
+betting_results <- as.data.frame(betting_results)
+betting_results$pred_point_differential <- model_tuned_preds
+betting_results$win_bet <- dplyr::case_when(
+                                  betting_results$spread_line < 0 & betting_results$spread_line < betting_results$point_differential & 
+                                    betting_results$pred_point_differential > betting_results$spread_line ~ "Win",
+                                  
+                                  betting_results$spread_line < 0 & betting_results$spread_line >= betting_results$point_differential & 
+                                    betting_results$pred_point_differential <= betting_results$spread_line ~ "Win",
+                                  
+                                  betting_results$spread_line > 0 & betting_results$spread_line <= betting_results$point_differential & 
+                                    betting_results$pred_point_differential >= betting_results$spread_line ~ "Win",
+                                  
+                                  betting_results$spread_line > 0 & betting_results$spread_line > betting_results$point_differential & 
+                                    betting_results$pred_point_differential < betting_results$spread_line ~ "Win",
+                                  
+                                  TRUE ~ "Lose"
+                                )
+betting_results$win_bet <- as.factor(betting_results$win_bet)
+
+bet_plot <- ggplot(betting_results, aes(x = spread_line, y = pred_point_differential, color = win_bet))+
+  geom_point() +
+  theme_bw() + # Set theme
+  theme(panel.grid.major = element_blank(), # Remove grid
+        panel.grid.minor = element_blank(), # Remove grid
+        panel.border = element_blank(), # Remove grid
+        panel.background = element_blank()) + # Remove grid 
+  labs(x = "Spread", title = "Betting Results",
+       y = "Predicted Point Differential", color = "Win Bet?")  # Set labels
+bet_plot
+summary(betting_results)
+paste("Proportion of Winning Bets:", summary(betting_results$win_bet)[2]/(summary(betting_results$win_bet)[1] + summary(betting_results$win_bet)[2]))
+```
+
+
 # Disconeect from DB
+
 ```{r}
 DBI::dbDisconnect(connection) #disconnect from database
 ```
