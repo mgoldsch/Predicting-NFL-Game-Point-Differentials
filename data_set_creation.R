@@ -387,11 +387,13 @@ for(i in 1:length(rollmean_ratio_var_names_met_avg_a)){
   rollmean_ratio_df[, rollmean_ratio_var_names_met_avg_a[i]] <- rollmean_ratio_df[, rm_names_avg_met_a_list[[2]][i]]/rollmean_ratio_df[, rm_names_avg_met_a_list[[1]][i]]
 }
 
-#write rollmean_ratio_df to db
+rollmean_ratio_df <- rollmean_ratio_df[, which(names(rollmean_ratio_df) %in% c("game_id", rollmean_ratio_var_names_met_h, rollmean_ratio_var_names_met_a, rollmean_ratio_var_names_met_avg_h, rollmean_ratio_var_names_met_avg_a))]
+
+#write rollmean_ratio_df to dbs
 DBI::dbWriteTable(connection, "rollmean_ratio_df", rollmean_ratio_df)
 
 #remove rollmean_ratio_df from memory
-#rm(rollmean_ratio_df)
+rm(rollmean_ratio_df)
 
 #get rollmean_df table
 rollmean_df_sql <- dplyr::tbl(connection, "rollmean_ratio_df") #get the rollmean_ratio_df table from the db
