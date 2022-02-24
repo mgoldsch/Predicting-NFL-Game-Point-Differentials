@@ -1009,7 +1009,7 @@ bet_plot <- ggplot(betting_results, aes(x = spread_line, y = pred_point_differen
   labs(x = "Spread", title = "Betting Results",
        y = "Predicted Point Differential", color = "Win Bet?")  # Set labels
 bet_plot
-summary(betting_results)
+summary(betting_results$win_bet)
 paste("Proportion of Winning Bets:", summary(betting_results$win_bet)[2]/(summary(betting_results$win_bet)[1] + summary(betting_results$win_bet)[2]))
 ```
 
