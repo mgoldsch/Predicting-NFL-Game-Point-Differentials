@@ -752,6 +752,7 @@ set.seed(111111)
 tic()
 model_big <- xgboost(data = dtrain_big, #set training data
                       nrounds = 100, #set number of rounds
+                      tree_method = "hist",
                       verbose = 1, #prints out fit
                       print_every_n = 20 #prints out result every 20th iteration
                       )
@@ -782,5 +783,196 @@ rmse(test_big$point_differential, big_model_preds)
 par(pty = "s")
 plot(test_big$point_differential, big_model_preds, asp = 1)
 abline(a = 0, b = 1)
+```
+
+# Tune Model
+
+```{r}
+set.seed(111111)
+tic()
+big_tune_1 <- xgb.cv(data = dtrain_big, #set training data
+                      nfold = 5,
+                      eta = 0.1,
+                      nrounds = 1000, #set number of rounds
+                      early_stopping_rounds = 50,
+                      tree_method = "hist",
+                      verbose = 1, #prints out fit
+                      print_every_n = 20, #prints out result every 20th iteration
+                      eval_metric = "rmse")
+toc()
+```
+
+```{r}
+max_depth_vals <- c(3, 5, 7, 10, 15) # Create vector of max depth values
+min_child_weight <- c(1,3,5,7, 10, 15) # Create vector of min child values
+gamma_vals <- c(0, 0.05, 0.1, 0.15, 0.2) # Create vector of gamma values
+subsample <- c(0.6, 0.7, 0.8, 0.9, 1) # Create vector of subsample values
+colsample_by_tree <- c(0.6, 0.7, 0.8, 0.9, 1) # Create vector of col sample values
+```
+
+Referenced this for tuning method: https://www.r-bloggers.com/2021/01/bayesian-model-based-optimization-in-r/
+
+```{r}
+library(mlrMBO)
+library(ParamHelpers)
+library(DiceKriging)
+library(smoof)
+```
+
+```{r}
+obj.fun <- makeSingleObjectiveFunction(
+  name = "xgb_cv_bayes",
+  fn =   function(x){
+    set.seed(123456)
+    cv <- xgb.cv(params = list(
+      booster          = "gbtree",
+      eta              = x["eta"],
+      max_depth        = x["max_depth"],
+      min_child_weight = x["min_child_weight"],
+      gamma            = x["gamma"],
+      subsample        = x["subsample"],
+      colsample_bytree = x["colsample_bytree"],
+      max_delta_step   = x["max_delta_step"], #add lambda and alpha
+      objective        = 'reg:squarederror', 
+      eval_metric     = 'rmse'),
+      data = dtrain_big, ## must set in global.Env()
+      nround = 1000, ## Set this large and use early stopping
+      nthread = 10, ## Adjust based on your machine
+      nfold =  5,
+      prediction = FALSE,
+      showsd = TRUE,
+      early_stopping_rounds = 25, ## If evaluation metric does not improve on out-of-fold sample for 25 rounds, stop #change this to 50
+      verbose = 1,
+      print_every_n = 20)
+
+    cv$evaluation_log %>% pull(4) %>% min  ## column 4 is the eval metric here, rmse
+  },
+  par.set = makeParamSet(
+    makeNumericParam("eta",                    lower = 0.005, upper = 0.01), #make eta higher .3
+    makeNumericParam("gamma",                  lower = 0,     upper = 0.2),
+    makeIntegerParam("max_depth",              lower= 2,      upper = 15),
+    makeIntegerParam("min_child_weight",       lower= 1,    upper = 15),
+    makeNumericParam("subsample",              lower = 0.20,  upper = 1),
+    makeNumericParam("colsample_bytree",       lower = 0.20,  upper = 1), #bring min colsample up
+    makeNumericParam("max_delta_step",         lower = 0,     upper = 10)
+  ), #try lambda and alpha 1-10, 0-10
+  minimize = TRUE ## rmse
+)
+```
+
+```{r}
+do_bayes <- function(n_design = NULL, opt_steps = NULL, of = obj.fun, seed = 123456) {
+  set.seed(seed)
+
+  des <- generateDesign(n=n_design,
+                        par.set = getParamSet(of),
+                        fun = lhs::randomLHS)
+
+  control <- makeMBOControl() %>%
+    setMBOControlTermination(., iters = opt_steps)
+
+  ## kriging with a matern(3,2) covariance function is the default surrogate model for numerical domains
+  ## but if you wanted to override this you could modify the makeLearner() call below to define your own
+  ## GP surrogate model with more or lesss smoothness, or use an entirely different method
+  run <- mbo(fun = of,
+             design = des,
+             learner = makeLearner("regr.km", predict.type = "se", covtype = "matern3_2", control = list(trace = FALSE)),
+             control = control, 
+             show.info = TRUE)
+
+  opt_plot <- run$opt.path$env$path %>%
+    mutate(Round = row_number())# %>%
+    #mutate(type = case_when(Round
+}
+```
+
+```{r}
+library(kableExtra)
+des <- generateDesign(n=45,
+                      par.set = getParamSet(obj.fun),
+                      fun = lhs::randomLHS)
+
+kable(des, format = "html", digits = 4) %>% 
+  kable_styling(font_size = 10) %>%
+  kable_material_dark()
+```
+
+```{r}
+library(scatterplot3d)
+scatterplot3d(des$eta, des$gamma, des$min_child_weight,
+              type = "h", color = "blue", pch = 16)
+```
+
+```{r}
+des <- generateDesign(n=30,
+                      par.set = getParamSet(obj.fun),
+                      fun = lhs::randomLHS)
+scatterplot3d(des$eta, des$gamma, des$min_child_weight,
+              type = "h", color = "blue", pch = 16)
+```
+
+```{r}
+#dm <- fre_dm
+tic()
+runs <- do_bayes(n_design = 30, of = obj.fun, opt_steps = 10, seed = 123456)
+toc()
+```
+
+mbo] 10: eta=0.00998; gamma=0.15; max_depth=7; min_child_weight=11; subsample=0.202; colsample_bytree=0.92; max_delta_step=9.13 : y = 10.5 : 646.5 secs : infill_cb
+> toc()
+35111.294 sec elapsed
+
+# Tuned Model
+
+```{r}
+set.seed(123456)
+tic()
+model_tuned <- xgboost(data = dtrain_big, #set training data
+                      nrounds = 1000, #set number of rounds
+                      tree_method = "hist",
+                      
+                      eta = 0.00998,
+                      gamma = 0.15,
+                      max_depth = 7,
+                      min_child_weight = 11,
+                      subsample = 0.202,
+                      colsample_bytree = 0.92,
+                      max_delta_step = 9.13,
+                      
+                      verbose = 1, #prints out fit
+                      print_every_n = 20 #prints out result every 20th iteration
+                      )
+toc()
+```
+
+```{r}
+#Variable Importance
+# Extract importance
+imp_mat <- xgb.importance(model = model_tuned)
+# Plot importance (top 10 variables)
+xgb.plot.importance(imp_mat, top_n = 40)
+```
+
+
+```{r}
+library(Metrics)
+
+model_tuned_preds <- predict(model_tuned, dtest_big)
+
+rmse(test_big$point_differential, model_tuned_preds)
+```
+
+
+
+```{r}
+#Plot Actual vs Predicted
+par(pty = "s")
+plot(test_big$point_differential, model_tuned_preds, asp = 1)
+abline(a = 0, b = 1)
+```
+
+# Disconeect from DB
+```{r}
+DBI::dbDisconnect(connection) #disconnect from database
 ```
 
