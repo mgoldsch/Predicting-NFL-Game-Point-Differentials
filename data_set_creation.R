@@ -119,6 +119,38 @@ game_off_sacks_ints <- pbp_db %>%
   dplyr::select(game_id, posteam, total_sacks_allow, avg_sacks_allow_per_drive, total_ints_throw, avg_ints_throw_per_drive) %>%
   dplyr::compute()
 
+#off first down stats
+game_off_first_down <- pbp_db %>% 
+  dplyr::filter(!is.na(posteam) & posteam != "") %>% 
+  dplyr::group_by(game_id, posteam, fixed_drive) %>% 
+  dplyr::summarise(qtr = qtr, drive_first_downs = drive_first_downs, rush_conv_first_down = sum(first_down_rush, na.rm = TRUE),
+                   pass_conv_first_down = sum(first_down_pass, na.rm = TRUE), penalty_conv_first_down = sum(first_down_penalty, na.rm = TRUE)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(game_id, posteam, qtr) %>% 
+  dplyr::summarise(first_downs = sum(drive_first_downs, na.rm = TRUE), rush_conversions_first_down = sum(rush_conv_first_down, na.rm = TRUE), 
+                   pass_conversions_first_down = sum(pass_conv_first_down, na.rm = TRUE), penalty_conversions_first_down = sum(penalty_conv_first_down, na.rm = TRUE), 
+                   drive_count = n()) %>% 
+  dplyr::mutate(first_down_drive_avg = first_downs/drive_count,
+                rush_conv_first_down_drive_avg = rush_conversions_first_down/drive_count, 
+                pass_conv_first_down_drive_avg = pass_conversions_first_down/drive_count, 
+                penalty_conv_first_down_drive_avg = penalty_conversions_first_down/drive_count) %>% 
+  dplyr::mutate(total_drives = sum(drive_count, na.rm = TRUE)) %>% 
+  dplyr::mutate(first_down_tot = sum(first_downs, na.rm = TRUE), 
+                rush_conv_first_down_tot = sum(rush_conversions_first_down, na.rm = TRUE), 
+                pass_conv_first_down_tot = sum(pass_conversions_first_down, na.rm = TRUE), 
+                penalty_conv_first_down_tot = sum(penalty_conversions_first_down, na.rm = TRUE)) %>%
+  dplyr::mutate(first_down_tot_drive_avg = first_down_tot/total_drives,
+                rush_conv_first_down_tot_drive_avg = rush_conv_first_down_tot/total_drives, 
+                pass_conv_first_down_tot_drive_avg = pass_conv_first_down_tot/total_drives, 
+                penalty_conv_first_down_tot_drive_avg = penalty_conv_first_down_tot/total_drives) %>% 
+  dplyr::select(-c(drive_count)) %>% 
+  pivot_wider(names_from = qtr,
+              values_from = c(first_downs, rush_conversions_first_down, pass_conversions_first_down, penalty_conversions_first_down, 
+                              first_down_drive_avg, rush_conv_first_down_drive_avg, pass_conv_first_down_drive_avg, penalty_conv_first_down_drive_avg),
+              names_glue = "{.value}_qtr_{qtr}") %>%
+  dplyr::select(-c(total_drives)) %>%
+  dplyr::compute()
+
 #get the teams in each game and other info like the point differential and scores of the teams
 game_teams_and_info <- pbp_db %>%
   dplyr::group_by(game_id) %>%
