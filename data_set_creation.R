@@ -5,8 +5,8 @@ library(tictoc)
 
 tic() #start clock
 
-wd <- dirname(sys.frame(1)$ofile) #gets the directory where this script is located
-setwd(wd) #sets the working directory to the directory of this script, this is so relative paths can be used below
+#wd <- dirname(sys.frame(1)$ofile) #gets the directory where this script is located
+#setwd(wd) #sets the working directory to the directory of this script, this is so relative paths can be used below
 
 connection <- DBI::dbConnect(RSQLite::SQLite(), "./data/pbp_db") #create connection for db
 
@@ -193,6 +193,13 @@ nfl_data_set <- game_teams_and_info %>%
   #join off sack int
   dplyr::left_join(game_off_sacks_ints, by = c('game_id' = 'game_id', 'home_team' = 'posteam')) %>%
   dplyr::left_join(game_off_sacks_ints, by = c('game_id' = 'game_id', 'away_team' = 'posteam'), suffix = c('_home', '_away')) %>%
+  #join first downs
+  dplyr::left_join(game_off_first_down, by = c('game_id' = 'game_id', 'home_team' = 'posteam')) %>% 
+  dplyr::left_join(game_off_first_down, by = c('game_id' = 'game_id', 'away_team' = 'posteam'), suffix = c('_home', '_away')) %>%
+  #join first downs defense allowed
+  dplyr::left_join(game_off_first_down, by = c('game_id' = 'game_id', 'home_team' = 'posteam')) %>% 
+  dplyr::left_join(game_off_first_down, by = c('game_id' = 'game_id', 'away_team' = 'posteam'), suffix = c('_home_defense_allowed', '_away_defense_allowed')) %>%
+  #collect
   dplyr::collect()
 
 #write nfl_data_set to db
@@ -244,6 +251,7 @@ nfl_rollmeans <- dplyr::tbl(connection, "nfl_data_set") %>% #get the nfl_data_se
    #             off_pass_yards_tot_home, off_rush_yards_tot_home, off_pass_yards_tot_away, off_rush_yards_tot_away) %>% #select columns to consider
   dplyr::collect()
 
+#TODO ADD FIRST DOWN STATS
 #variables that are going to have rollmean applied
 met_h <- c("home_score", "off_pass_yards_tot_home", "off_rush_yards_tot_home", 
            "off_passing_yards_qtr_1_home", "off_passing_yards_qtr_2_home", 
@@ -254,6 +262,20 @@ met_h <- c("home_score", "off_pass_yards_tot_home", "off_rush_yards_tot_home",
            "home_total_plays", "total_sacks_home", "total_ints_home", "total_sacks_allow_home", "total_ints_throw_home", "home_total_time_pos", 
            "total_drives_home", "drive_count_qtr_1_home", "drive_count_qtr_2_home", "drive_count_qtr_3_home", "drive_count_qtr_4_home") #vector of variables to apply rollmeans to (home varaibles)
 met_h <- c(met_h, sapply(c(met_h[2:11], met_h[23:27]), function(x){paste0(x, "_defense_allowed")}, USE.NAMES = FALSE)) #create defense allowed variable names
+met_h <- c(met_h, sapply(c("first_down_tot", "rush_conv_first_down_tot", 
+           "pass_conv_first_down_tot", "penalty_conv_first_down_tot", "first_downs_qtr_1", 
+           "first_downs_qtr_2", "first_downs_qtr_3", "first_downs_qtr_4", "rush_conversions_first_down_qtr_1", "rush_conversions_first_down_qtr_2", 
+           "rush_conversions_first_down_qtr_3", "rush_conversions_first_down_qtr_4", "pass_conversions_first_down_qtr_1", 
+           "pass_conversions_first_down_qtr_2", "pass_conversions_first_down_qtr_3", 
+           "pass_conversions_first_down_qtr_4", "penalty_conversions_first_down_qtr_1", "penalty_conversions_first_down_qtr_2", 
+           "penalty_conversions_first_down_qtr_3", "penalty_conversions_first_down_qtr_4"), function(x){paste0(x, "_home")}, USE.NAMES = FALSE))
+met_h <- c(met_h, sapply(c("first_down_tot", "rush_conv_first_down_tot", 
+                           "pass_conv_first_down_tot", "penalty_conv_first_down_tot", "first_downs_qtr_1", 
+                           "first_downs_qtr_2", "first_downs_qtr_3", "first_downs_qtr_4", "rush_conversions_first_down_qtr_1", "rush_conversions_first_down_qtr_2", 
+                           "rush_conversions_first_down_qtr_3", "rush_conversions_first_down_qtr_4", "pass_conversions_first_down_qtr_1", 
+                           "pass_conversions_first_down_qtr_2", "pass_conversions_first_down_qtr_3", 
+                           "pass_conversions_first_down_qtr_4", "penalty_conversions_first_down_qtr_1", "penalty_conversions_first_down_qtr_2", 
+                           "penalty_conversions_first_down_qtr_3", "penalty_conversions_first_down_qtr_4"), function(x){paste0(x, "_home_defense_allowed")}, USE.NAMES = FALSE))
 
 met_a <- c("away_score", "off_pass_yards_tot_away", "off_rush_yards_tot_away", 
            "off_passing_yards_qtr_1_away", "off_passing_yards_qtr_2_away", 
@@ -264,6 +286,21 @@ met_a <- c("away_score", "off_pass_yards_tot_away", "off_rush_yards_tot_away",
            "away_total_plays", "total_sacks_away", "total_ints_away", "total_sacks_allow_away", "total_ints_throw_away", "away_total_time_pos", 
            "total_drives_away", "drive_count_qtr_1_away", "drive_count_qtr_2_away", "drive_count_qtr_3_away", "drive_count_qtr_4_away") #vector of variables to apply rollmeans to (away varaibles)
 met_a <- c(met_a, sapply(c(met_a[2:11], met_a[23:27]), function(x){paste0(x, "_defense_allowed")}, USE.NAMES = FALSE)) #create defense allowed variable names
+met_a <- c(met_a, sapply(c("first_down_tot", "rush_conv_first_down_tot", 
+                           "pass_conv_first_down_tot", "penalty_conv_first_down_tot", "first_downs_qtr_1", 
+                           "first_downs_qtr_2", "first_downs_qtr_3", "first_downs_qtr_4", "rush_conversions_first_down_qtr_1", "rush_conversions_first_down_qtr_2", 
+                           "rush_conversions_first_down_qtr_3", "rush_conversions_first_down_qtr_4", "pass_conversions_first_down_qtr_1", 
+                           "pass_conversions_first_down_qtr_2", "pass_conversions_first_down_qtr_3", 
+                           "pass_conversions_first_down_qtr_4", "penalty_conversions_first_down_qtr_1", "penalty_conversions_first_down_qtr_2", 
+                           "penalty_conversions_first_down_qtr_3", "penalty_conversions_first_down_qtr_4"), function(x){paste0(x, "_away")}, USE.NAMES = FALSE))
+met_a <- c(met_a, sapply(c("first_down_tot", "rush_conv_first_down_tot", 
+                           "pass_conv_first_down_tot", "penalty_conv_first_down_tot", "first_downs_qtr_1", 
+                           "first_downs_qtr_2", "first_downs_qtr_3", "first_downs_qtr_4", "rush_conversions_first_down_qtr_1", "rush_conversions_first_down_qtr_2", 
+                           "rush_conversions_first_down_qtr_3", "rush_conversions_first_down_qtr_4", "pass_conversions_first_down_qtr_1", 
+                           "pass_conversions_first_down_qtr_2", "pass_conversions_first_down_qtr_3", 
+                           "pass_conversions_first_down_qtr_4", "penalty_conversions_first_down_qtr_1", "penalty_conversions_first_down_qtr_2", 
+                           "penalty_conversions_first_down_qtr_3", "penalty_conversions_first_down_qtr_4"), function(x){paste0(x, "_away_defense_allowed")}, USE.NAMES = FALSE))
+
 
 #rollmean variables that are already averages (need to apply weighted rolling averages)
 avg_metrics <- c("off_pass_yards_drive_avg", "off_rush_yards_drive_avg", "off_pass_yds_drive_avg_qtr_1",
@@ -271,26 +308,36 @@ avg_metrics <- c("off_pass_yards_drive_avg", "off_rush_yards_drive_avg", "off_pa
                  "off_rush_yds_drive_avg_qtr_1", "off_rush_yds_drive_avg_qtr_2", "off_rush_yds_drive_avg_qtr_3", "off_rush_yds_drive_avg_qtr_4",
                  "yac_drive_avg_qtr_1", "yac_drive_avg_qtr_2", "yac_drive_avg_qtr_3", "yac_drive_avg_qtr_4",
                  "avg_sacks_allow_per_drive", "avg_ints_throw_per_drive", "avg_sacks_per_drive", "avg_ints_per_drive")
+avg_metrics <- c(avg_metrics, "first_down_tot_drive_avg", "rush_conv_first_down_tot_drive_avg", "pass_conv_first_down_tot_drive_avg", 
+                 "penalty_conv_first_down_tot_drive_avg", "first_down_drive_avg_qtr_1", "first_down_drive_avg_qtr_2", "first_down_drive_avg_qtr_3", 
+                 "first_down_drive_avg_qtr_4", "rush_conv_first_down_drive_avg_qtr_1", "rush_conv_first_down_drive_avg_qtr_2", "rush_conv_first_down_drive_avg_qtr_3", 
+                 "rush_conv_first_down_drive_avg_qtr_4", "pass_conv_first_down_drive_avg_qtr_1", "pass_conv_first_down_drive_avg_qtr_2", "pass_conv_first_down_drive_avg_qtr_3", "pass_conv_first_down_drive_avg_qtr_4", "penalty_conv_first_down_drive_avg_qtr_1", 
+                 "penalty_conv_first_down_drive_avg_qtr_2", "penalty_conv_first_down_drive_avg_qtr_3", "penalty_conv_first_down_drive_avg_qtr_4")
 
-avg_met_weights <- c(rep("total_drives", 2), rep(c("drive_count_qtr_1", "drive_count_qtr_2", "drive_count_qtr_3", "drive_count_qtr_4"), 3), rep("total_drives", 2))
+avg_met_weights <- c(rep("total_drives", 2), rep(c("drive_count_qtr_1", "drive_count_qtr_2", "drive_count_qtr_3", "drive_count_qtr_4"), 3), 
+                     rep("total_drives", 6), rep(c("drive_count_qtr_1", "drive_count_qtr_2", "drive_count_qtr_3", "drive_count_qtr_4"), 4))
 
 avg_metrics_h <- c(sapply(avg_metrics, function(x){paste0(x, "_home")}, USE.NAMES = FALSE), "home_yac_drive_avg", "home_plays_per_drive", "home_avg_drive_time_pos")
-avg_metrics_h<- c(avg_metrics_h, sapply(avg_metrics_h[1:10], function(x){paste0(x, "_defense_allowed")})) #create defense allowed variable names
+avg_metrics_h<- c(avg_metrics_h, sapply(c(avg_metrics_h[1:10], avg_metrics_h[19:38]), function(x){paste0(x, "_defense_allowed")}, USE.NAMES = FALSE)) #create defense allowed variable names
 
 avg_met_weights_h <- c(sapply(avg_met_weights, function(x){paste0(x, "_home")}, USE.NAMES = FALSE), 
                        rep("total_drives_home_defense_allowed", 2), rep("total_drives_home", 3),
                        rep("total_drives_home_defense_allowed", 2), 
                        rep(c("drive_count_qtr_1_home_defense_allowed", "drive_count_qtr_2_home_defense_allowed", 
-                             "drive_count_qtr_3_home_defense_allowed", "drive_count_qtr_4_home_defense_allowed"), 2))
+                             "drive_count_qtr_3_home_defense_allowed", "drive_count_qtr_4_home_defense_allowed"), 2), 
+                       rep("total_drives_home_defense_allowed", 4), 
+                       rep(c("drive_count_qtr_1_home_defense_allowed", "drive_count_qtr_2_home_defense_allowed", "drive_count_qtr_3_home_defense_allowed", "drive_count_qtr_4_home_defense_allowed"), 4))
 
 avg_metrics_a <- c(sapply(avg_metrics, function(x){paste0(x, "_away")}, USE.NAMES = FALSE), "away_yac_drive_avg", "away_plays_per_drive", "away_avg_drive_time_pos")
-avg_metrics_a<- c(avg_metrics_a, sapply(avg_metrics_a[1:10], function(x){paste0(x, "_defense_allowed")})) #create defense allowed variable names
+avg_metrics_a<- c(avg_metrics_a, sapply(c(avg_metrics_a[1:10], avg_metrics_a[19:38]), function(x){paste0(x, "_defense_allowed")}, USE.NAMES = FALSE)) #create defense allowed variable names
 
 avg_met_weights_a <- c(sapply(avg_met_weights, function(x){paste0(x, "_away")}, USE.NAMES = FALSE),
                        rep("total_drives_away_defense_allowed", 2), rep("total_drives_away", 3), 
                        rep("total_drives_away_defense_allowed", 2), 
                        rep(c("drive_count_qtr_1_away_defense_allowed", "drive_count_qtr_2_away_defense_allowed", 
-                             "drive_count_qtr_3_away_defense_allowed", "drive_count_qtr_4_away_defense_allowed"), 2))
+                             "drive_count_qtr_3_away_defense_allowed", "drive_count_qtr_4_away_defense_allowed"), 2), 
+                       rep("total_drives_away_defense_allowed", 4), 
+                       rep(c("drive_count_qtr_1_away_defense_allowed", "drive_count_qtr_2_away_defense_allowed", "drive_count_qtr_3_away_defense_allowed", "drive_count_qtr_4_away_defense_allowed"), 4))
 
 rm_names_met_h_list <- list()
 rm_names_met_a_list <- list()
