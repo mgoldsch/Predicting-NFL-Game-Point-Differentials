@@ -1105,7 +1105,7 @@ toc()
 # Extract importance
 imp_mat <- xgb.importance(model = model_big)
 # Plot importance (top 10 variables)
-xgb.plot.importance(imp_mat,  top_n = 20)
+xgb.plot.importance(imp_mat, left_margin = 20, top_n = 10)
 ```
 #### Test Model
 
@@ -1303,7 +1303,7 @@ toc()
 # Extract importance
 imp_mat <- xgb.importance(model = model_tuned)
 # Plot importance (top 10 variables)
-xgb.plot.importance(imp_mat, left_margin = 15, top_n = 20)
+xgb.plot.importance(imp_mat, left_margin = 21, top_n = 10)
 ```
 
 
@@ -1325,6 +1325,52 @@ abline(a = 0, b = 1)
 ```
 
 # Betting results
+
+### Initial Model
+
+```{r}
+betting_results <- nfl_data_set %>% #remove weeks 1-4, 16, 17 (in training and test, can create another model for those week) - add confidence interval
+  dplyr::filter(season %in% c(2019, 2021) & season_type == "REG") %>% 
+  dplyr::select(game_id, season, week, point_differential, spread_line) %>% 
+  #dplyr::mutate(pred_point_differential = model_tuned_preds) %>% 
+  dplyr::collect()
+
+betting_results <- as.data.frame(betting_results)
+betting_results$pred_point_differential <- big_model_preds
+betting_results$win_bet <- dplyr::case_when(
+                                  betting_results$spread_line < 0 & betting_results$spread_line < betting_results$point_differential & 
+                                    betting_results$pred_point_differential > betting_results$spread_line ~ "Win",
+                                  
+                                  betting_results$spread_line < 0 & betting_results$spread_line >= betting_results$point_differential & 
+                                    betting_results$pred_point_differential <= betting_results$spread_line ~ "Win",
+                                  
+                                  betting_results$spread_line > 0 & betting_results$spread_line <= betting_results$point_differential & 
+                                    betting_results$pred_point_differential >= betting_results$spread_line ~ "Win",
+                                  
+                                  betting_results$spread_line > 0 & betting_results$spread_line > betting_results$point_differential & 
+                                    betting_results$pred_point_differential < betting_results$spread_line ~ "Win",
+                                  
+                                  TRUE ~ "Lose"
+                                )
+betting_results$win_bet <- as.factor(betting_results$win_bet)
+
+bet_plot <- ggplot(betting_results, aes(x = spread_line, y = pred_point_differential, color = win_bet))+
+  geom_point() +
+  geom_abline(slope = 1, intercept = 1) +
+  xlim(-20, 20) + 
+  ylim(-20, 20) + 
+  theme_bw() + # Set theme
+  theme(panel.grid.major = element_blank(), # Remove grid
+        panel.grid.minor = element_blank(), # Remove grid
+        panel.border = element_blank(), # Remove grid
+        panel.background = element_blank()) + # Remove grid 
+  labs(x = "Spread", title = "Betting Results",
+       y = "Predicted Point Differential", color = "Win Bet?")  # Set labels
+bet_plot
+summary(betting_results$win_bet)
+paste("Proportion of Winning Bets:", summary(betting_results$win_bet)[2]/(summary(betting_results$win_bet)[1] + summary(betting_results$win_bet)[2]))
+```
+### Tuned Model
 
 ```{r}
 betting_results <- nfl_data_set %>% #remove weeks 1-4, 16, 17 (in training and test, can create another model for those week) - add confidence interval
@@ -1355,6 +1401,8 @@ betting_results$win_bet <- as.factor(betting_results$win_bet)
 bet_plot <- ggplot(betting_results, aes(x = spread_line, y = pred_point_differential, color = win_bet))+
   geom_point() +
   geom_abline(slope = 1, intercept = 1) +
+  xlim(-20, 20) + 
+  ylim(-20, 20) + 
   theme_bw() + # Set theme
   theme(panel.grid.major = element_blank(), # Remove grid
         panel.grid.minor = element_blank(), # Remove grid
