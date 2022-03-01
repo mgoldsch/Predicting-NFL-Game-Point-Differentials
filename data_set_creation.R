@@ -151,6 +151,10 @@ game_off_first_down <- pbp_db %>%
   dplyr::select(-c(total_drives)) %>%
   dplyr::compute()
 
+#add epa
+#add wpa
+
+
 #get the teams in each game and other info like the point differential and scores of the teams
 game_teams_and_info <- pbp_db %>%
   dplyr::group_by(game_id) %>%
@@ -237,10 +241,89 @@ rm(nfl_data_set_sql)
 #delete game_team_pos_total_avg table
 DBI::dbRemoveTable(connection, "game_team_pos_total_avg")
 
+#elo
+teams <- dplyr::tbl(connection, "nfl_data_set") %>% #get list of teams
+  dplyr::distinct(home_team) %>% 
+  dplyr::pull()
+elo <- rep(1500, length(teams))
+
+teams <- cbind.data.frame(teams, elo)
+names(teams) <- c("teams", "elo")
+
+game_count <- dplyr::tbl(connection, "nfl_data_set") %>% 
+  dplyr::summarise(game_count = n()) %>% 
+  dplyr::select(game_count) %>% 
+  dplyr::pull()
+
+games <- dplyr::tbl(connection, "nfl_data_set") %>% 
+  dplyr::select(game_id, season, week, home_team, away_team, point_differential) %>%
+  dplyr::collect()
+
+elo_vec_1 <- elo_vec_2 <- rep(NA, game_count)
+
+# For each game in our dataset
+for(i in 1:game_count){
+  if(i > 2){
+    if(games$season[i] != games$season[i-1]){
+      teams$elo <- 1500
+    }
+  }
+  
+  # Extract team 1 Elo
+  team1_elo <- teams$elo[teams$team == games$home_team[i]]
+  # Extract team 2 Elo
+  team2_elo <- teams$elo[teams$team ==  games$away_team[i]]
+  
+  # Store elo values
+  elo_vec_1[i] <- team1_elo
+  elo_vec_2[i] <- team2_elo
+  
+  # Calculate new Elo ratings
+  new_elo <- elo.calc(wins.A = ifelse(games$point_differential[i] > 0, 1, ifelse(games$point_differential[i] == 0, .5, 0)),
+                      elo.A = team1_elo,
+                      elo.B = team2_elo,
+                      k= 100) #update rate
+  
+  # Store new elo ratings for home team
+  teams$elo[teams$team ==games$home_team[i]] <- new_elo[1,1]
+  # Store new elo ratings for away team
+  teams$elo[teams$team == games$away_team[i]] <- new_elo[1,2]
+}
+
+#create elo dataframe
+elo_df <- cbind.data.frame(games, home_elo = elo_vec_1, away_elo = elo_vec_2)
+elo_df <- elo_df[, c("game_id", "home_elo", "away_elo")]
+
+#write elo_df to db
+DBI::dbWriteTable(connection, "elo_df", elo_df)
+
+#remove rollmean_df from memory
+rm(elo_df)
+
+#get elo_df table
+elo_df_sql <- dplyr::tbl(connection, "elo_df") #get the elo_df table from the db
+
+#join nfl_data_set and elo_df tables
+nfl_data_set_sql <- dplyr::tbl(connection, "nfl_data_set") %>%  #get the nfl_data_set table from the db
+  dplyr::left_join(elo_df_sql, by = c('game_id' = 'game_id')) %>%
+  dplyr::collect()
+
+#remove nfl_data_set table from db
+DBI::dbRemoveTable(connection, "nfl_data_set")
+
+#insert nfl_data_set table in db with the joined result
+DBI::dbWriteTable(connection, "nfl_data_set", nfl_data_set_sql)
+
+#remove nfl_data_set_sql from memory
+rm(nfl_data_set_sql)
+
+#delete rollmean_df table
+DBI::dbRemoveTable(connection, "elo_df")
+
+
 #create rollmeans
 library(zoo) #for rollmean
 library(roll) #for weighted rollmean
-library(Hmisc) #for lagged roll_mean
 
 teams <- dplyr::tbl(connection, "nfl_data_set") %>% #get list of teams
   dplyr::distinct(home_team) %>% 
@@ -251,7 +334,6 @@ nfl_rollmeans <- dplyr::tbl(connection, "nfl_data_set") %>% #get the nfl_data_se
    #             off_pass_yards_tot_home, off_rush_yards_tot_home, off_pass_yards_tot_away, off_rush_yards_tot_away) %>% #select columns to consider
   dplyr::collect()
 
-#TODO ADD FIRST DOWN STATS
 #variables that are going to have rollmean applied
 met_h <- c("home_score", "off_pass_yards_tot_home", "off_rush_yards_tot_home", 
            "off_passing_yards_qtr_1_home", "off_passing_yards_qtr_2_home", 
