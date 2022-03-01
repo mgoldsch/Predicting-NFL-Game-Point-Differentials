@@ -1055,7 +1055,9 @@ model_big_data_use <- nfl_data_set %>%
                 penalty_conv_first_down_drive_avg_qtr_1_home_defense_allowed_3w_avg_RATIO_penalty_conv_first_down_drive_avg_qtr_1_home_defense_allowed_5w_avg, 
                 penalty_conv_first_down_drive_avg_qtr_2_home_defense_allowed_3w_avg_RATIO_penalty_conv_first_down_drive_avg_qtr_2_home_defense_allowed_5w_avg, 
                 penalty_conv_first_down_drive_avg_qtr_3_home_defense_allowed_3w_avg_RATIO_penalty_conv_first_down_drive_avg_qtr_3_home_defense_allowed_5w_avg, 
-                penalty_conv_first_down_drive_avg_qtr_4_home_defense_allowed_3w_avg_RATIO_penalty_conv_first_down_drive_avg_qtr_4_home_defense_allowed_5w_avg)%>%
+                penalty_conv_first_down_drive_avg_qtr_4_home_defense_allowed_3w_avg_RATIO_penalty_conv_first_down_drive_avg_qtr_4_home_defense_allowed_5w_avg, 
+                
+                home_elo, away_elo)%>%
   dplyr::collect()
 ```
 
@@ -1170,7 +1172,9 @@ obj.fun <- makeSingleObjectiveFunction(
       gamma            = x["gamma"],
       subsample        = x["subsample"],
       colsample_bytree = x["colsample_bytree"],
-      max_delta_step   = x["max_delta_step"], #add lambda and alpha
+      max_delta_step   = x["max_delta_step"],
+      lambda           = x["lambda"],
+      alpha            = x["alpha"],
       objective        = 'reg:squarederror', 
       eval_metric     = 'rmse'),
       data = dtrain_big, ## must set in global.Env()
@@ -1179,21 +1183,23 @@ obj.fun <- makeSingleObjectiveFunction(
       nfold =  5,
       prediction = FALSE,
       showsd = TRUE,
-      early_stopping_rounds = 25, ## If evaluation metric does not improve on out-of-fold sample for 25 rounds, stop #change this to 50
+      early_stopping_rounds = 50, ## If evaluation metric does not improve on out-of-fold sample for 50 rounds
       verbose = 1,
       print_every_n = 20)
 
     cv$evaluation_log %>% pull(4) %>% min  ## column 4 is the eval metric here, rmse
   },
   par.set = makeParamSet(
-    makeNumericParam("eta",                    lower = 0.005, upper = 0.01), #make eta higher .3
+    makeNumericParam("eta",                    lower = 0.005, upper = 0.3),
     makeNumericParam("gamma",                  lower = 0,     upper = 0.2),
     makeIntegerParam("max_depth",              lower= 2,      upper = 15),
     makeIntegerParam("min_child_weight",       lower= 1,    upper = 15),
     makeNumericParam("subsample",              lower = 0.20,  upper = 1),
-    makeNumericParam("colsample_bytree",       lower = 0.20,  upper = 1), #bring min colsample up
-    makeNumericParam("max_delta_step",         lower = 0,     upper = 10)
-  ), #try lambda and alpha 1-10, 0-10
+    makeNumericParam("colsample_bytree",       lower = 0.70,  upper = 1),
+    makeNumericParam("max_delta_step",         lower = 0,     upper = 10),
+    makeNumericParam("lambda",                 lower = 1,     upper = 10),
+    makeNumericParam("alpha",                  lower = 0,     upper = 10)
+  ),
   minimize = TRUE ## rmse
 )
 ```
@@ -1242,7 +1248,7 @@ scatterplot3d(des$eta, des$gamma, des$min_child_weight,
 ```
 
 ```{r}
-des <- generateDesign(n=30,
+des <- generateDesign(n=63,
                       par.set = getParamSet(obj.fun),
                       fun = lhs::randomLHS)
 scatterplot3d(des$eta, des$gamma, des$min_child_weight,
@@ -1252,7 +1258,7 @@ scatterplot3d(des$eta, des$gamma, des$min_child_weight,
 ```{r}
 #dm <- fre_dm
 tic()
-runs <- do_bayes(n_design = 30, of = obj.fun, opt_steps = 10, seed = 123456) #will need to change n_design when more hyparameters are added
+runs <- do_bayes(n_design = 63, of = obj.fun, opt_steps = 10, seed = 123456)
 toc()
 ```
 
@@ -1260,22 +1266,31 @@ mbo] 10: eta=0.00998; gamma=0.15; max_depth=7; min_child_weight=11; subsample=0.
 > toc()
 35111.294 sec elapsed
 
+[mbo] 10: eta=0.152; gamma=0.138; max_depth=2; min_child_weight=10; subsample=0.756; colsample_bytree=0.88; max_delta_step=6.5; lambda=4.81; alpha=3.29 : y = 14 : 53.1 secs : infill_cb
+> toc()
+19919.057 sec elapsed
+
+[mbo] 10: eta=0.267; gamma=0.0587; max_depth=2; min_child_weight=9; subsample=0.807; colsample_bytree=0.905; max_delta_step=0.899; lambda=9.62; alpha=8.79 : y = 13.9 : 76.5 secs : infill_cb
+26791.513 sec elapsed
+
 # Tuned Model
 
 ```{r}
 set.seed(123456)
 tic()
 model_tuned <- xgboost(data = dtrain_big, #set training data
-                      nrounds = 1000, #set number of rounds
+                      nrounds = 100, #set number of rounds
                       tree_method = "hist",
                       
-                      eta = 0.00998,
-                      gamma = 0.15,
-                      max_depth = 7,
-                      min_child_weight = 11,
-                      subsample = 0.202,
-                      colsample_bytree = 0.92,
-                      max_delta_step = 9.13,
+                      eta = 0.267,
+                      gamma = 0.0587,
+                      max_depth = 2,
+                      min_child_weight = 9,
+                      subsample = 0.807,
+                      colsample_bytree = 0.905,
+                      max_delta_step = 0.899,
+                      lambda = 9.62,
+                      alpha = 8.79,
                       
                       verbose = 1, #prints out fit
                       print_every_n = 20 #prints out result every 20th iteration
@@ -1312,7 +1327,7 @@ abline(a = 0, b = 1)
 # Betting results
 
 ```{r}
-betting_results <- nfl_data_set %>%
+betting_results <- nfl_data_set %>% #remove weeks 1-4, 16, 17 (in training and test, can create another model for those week) - add confidence interval
   dplyr::filter(season %in% c(2019, 2021) & season_type == "REG") %>% 
   dplyr::select(game_id, season, week, point_differential, spread_line) %>% 
   #dplyr::mutate(pred_point_differential = model_tuned_preds) %>% 
@@ -1339,6 +1354,7 @@ betting_results$win_bet <- as.factor(betting_results$win_bet)
 
 bet_plot <- ggplot(betting_results, aes(x = spread_line, y = pred_point_differential, color = win_bet))+
   geom_point() +
+  geom_abline(slope = 1, intercept = 1) +
   theme_bw() + # Set theme
   theme(panel.grid.major = element_blank(), # Remove grid
         panel.grid.minor = element_blank(), # Remove grid
@@ -1350,7 +1366,6 @@ bet_plot
 summary(betting_results$win_bet)
 paste("Proportion of Winning Bets:", summary(betting_results$win_bet)[2]/(summary(betting_results$win_bet)[1] + summary(betting_results$win_bet)[2]))
 ```
-
 
 # Disconeect from DB
 
